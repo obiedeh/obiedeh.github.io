@@ -175,6 +175,36 @@
         line-height: 1.55;
       }
 
+      .media-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 24px;
+        margin-top: 34px;
+        display: grid;
+      }
+
+      .media-panel {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        padding: 18px;
+        box-shadow: inset 0 1px #ffffff14;
+      }
+
+      .media-panel img {
+        aspect-ratio: 4 / 3;
+        object-fit: cover;
+        width: 100%;
+        height: auto;
+        display: block;
+        background: #090b0a;
+      }
+
+      .media-panel figcaption {
+        color: var(--muted);
+        margin-top: 14px;
+        font-size: 13px;
+        line-height: 1.55;
+      }
+
       .video-panel {
         background: var(--panel);
         border: 1px solid var(--line);
@@ -226,7 +256,8 @@
         .case-meta,
         .case-grid,
         .metric-band,
-        .chart-grid {
+        .chart-grid,
+        .media-grid {
           grid-template-columns: 1fr;
         }
 
@@ -316,6 +347,16 @@
               <li>An Isaac Sim Ludo pick-and-place executor with provenance, per-attempt records, summaries, and correction sidecars.</li>
               <li>Evidence charts generated from committed repo artifacts rather than notebook-only screenshots.</li>
             </ul>
+            <div class="media-grid" aria-label="Digital twin media">
+              <figure class="media-panel">
+                <img src="/assets/media/digital-twin-workspace.jpeg" alt="Digital twin workspace image">
+                <figcaption>Digital twin workspace used to show the simulation context behind the case study.</figcaption>
+              </figure>
+              <figure class="media-panel">
+                <img src="/assets/media/isaac-sim-openusd-scene.jpeg" alt="Isaac Sim and OpenUSD scene image">
+                <figcaption>Isaac Sim and OpenUSD scene context for the simulation side of the Physical AI workflow.</figcaption>
+              </figure>
+            </div>
           </div>
         </div>
       </section>
