@@ -1,0 +1,441 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Physical AI Evidence Case Study - Obinna Edeh</title>
+    <meta name="description" content="Physical AI case study with Jetson AGX Thor, Orin NX, simulation, and correction evidence.">
+    <link rel="stylesheet" href="/assets/index-B7oc_5-U.css">
+    <link rel="shortcut icon" href="/favicon.svg">
+    <link rel="icon" href="/favicon.svg">
+    <style>
+      .case-hero {
+        border-bottom: 1px solid var(--line);
+        min-height: auto;
+        padding: 94px 0 86px;
+      }
+
+      .case-hero h1 {
+        letter-spacing: -.065em;
+        max-width: 1100px;
+        margin: 32px 0 34px;
+        font-size: clamp(52px, 7vw, 104px);
+        font-weight: 500;
+        line-height: .94;
+      }
+
+      .case-hero h1 em {
+        color: var(--lime);
+        font-style: normal;
+      }
+
+      .case-hero .lead {
+        max-width: 780px;
+        color: var(--muted);
+        margin: 0;
+        font-size: 20px;
+        line-height: 1.65;
+      }
+
+      .case-meta {
+        border-top: 1px solid var(--line);
+        border-bottom: 1px solid var(--line);
+        grid-template-columns: repeat(3, 1fr);
+        margin-top: 48px;
+        display: grid;
+      }
+
+      .case-meta div {
+        border-right: 1px solid var(--line);
+        padding: 20px 24px 20px 0;
+      }
+
+      .case-meta div + div {
+        padding-left: 24px;
+      }
+
+      .case-meta div:last-child {
+        border-right: 0;
+      }
+
+      .case-meta span,
+      .case-meta strong {
+        display: block;
+      }
+
+      .case-meta span {
+        font: 10px var(--font-geist-mono), monospace;
+        letter-spacing: .1em;
+        color: #687069;
+        margin-bottom: 8px;
+        text-transform: uppercase;
+      }
+
+      .case-meta strong {
+        color: var(--muted);
+        font-size: 14px;
+        font-weight: 600;
+      }
+
+      .case-section {
+        border-top: 1px solid var(--line);
+        padding: 96px 0;
+      }
+
+      .case-grid {
+        grid-template-columns: .42fr 1fr;
+        gap: 70px;
+        display: grid;
+      }
+
+      .case-copy h2 {
+        letter-spacing: -.045em;
+        margin: 0 0 24px;
+        font-size: clamp(34px, 4vw, 56px);
+        font-weight: 500;
+        line-height: 1;
+      }
+
+      .case-copy p,
+      .case-copy li {
+        color: var(--muted);
+        font-size: 17px;
+        line-height: 1.75;
+      }
+
+      .case-copy p {
+        margin: 0 0 22px;
+      }
+
+      .case-copy ul {
+        display: grid;
+        gap: 14px;
+      }
+
+      .metric-band {
+        border-top: 1px solid #68b7ff33;
+        border-bottom: 1px solid #68b7ff33;
+        grid-template-columns: repeat(4, 1fr);
+        margin: 36px 0 30px;
+        display: grid;
+      }
+
+      .metric-band div {
+        border-right: 1px solid #68b7ff29;
+        padding: 24px 18px 24px 0;
+      }
+
+      .metric-band div + div {
+        padding-left: 20px;
+      }
+
+      .metric-band div:last-child {
+        border-right: 0;
+      }
+
+      .metric-band strong,
+      .metric-band span {
+        display: block;
+      }
+
+      .metric-band strong {
+        color: var(--ink);
+        font-size: 24px;
+      }
+
+      .metric-band span {
+        color: #8eaab3;
+        margin-top: 7px;
+        font-size: 12px;
+        line-height: 1.5;
+      }
+
+      .chart-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 24px;
+        display: grid;
+      }
+
+      .chart-panel {
+        background: #1b2629;
+        border: 1px solid #68b7ff52;
+        padding: 18px;
+        box-shadow: inset 0 1px #68b7ff1f;
+      }
+
+      .chart-panel img {
+        width: 100%;
+        height: auto;
+      }
+
+      .chart-panel figcaption {
+        color: var(--muted);
+        margin-top: 14px;
+        font-size: 13px;
+        line-height: 1.55;
+      }
+
+      .video-panel {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        padding: 18px;
+      }
+
+      .video-panel video {
+        width: 100%;
+        background: #090b0a;
+      }
+
+      .evidence-links {
+        flex-wrap: wrap;
+        gap: 12px;
+        display: flex;
+      }
+
+      .evidence-links a {
+        border: 1px solid var(--line);
+        color: var(--ink);
+        padding: 13px 16px;
+        font-size: 14px;
+        font-weight: 700;
+      }
+
+      .evidence-links a:hover {
+        color: var(--lime);
+      }
+
+      .source-list {
+        border-top: 1px solid var(--line);
+        margin-top: 26px;
+        padding-top: 22px;
+      }
+
+      .source-list a {
+        color: var(--blue);
+      }
+
+      @media (width <= 760px) {
+        .case-hero {
+          padding-top: 62px;
+        }
+
+        .case-hero h1 {
+          font-size: 52px;
+        }
+
+        .case-meta,
+        .case-grid,
+        .metric-band,
+        .chart-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .case-meta div,
+        .case-meta div + div,
+        .metric-band div,
+        .metric-band div + div {
+          border-right: 0;
+          border-bottom: 1px solid var(--line);
+          padding: 18px 0;
+        }
+
+        .case-meta div:last-child,
+        .metric-band div:last-child {
+          border-bottom: 0;
+        }
+
+        .case-section {
+          padding: 78px 0;
+        }
+
+        .chart-panel {
+          padding: 10px;
+          overflow-x: auto;
+        }
+
+        .chart-panel img {
+          min-width: 640px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <header class="nav shell">
+        <a class="brand" href="/#top" aria-label="Obinna Edeh home">
+          <span class="brand-mark">OE</span>
+          <span>Obinna Edeh</span>
+        </a>
+        <nav aria-label="Primary navigation">
+          <a href="/#work">Work</a>
+          <a href="/#approach">About</a>
+          <a href="/#contact">Contact</a>
+        </nav>
+        <a class="nav-cta" href="https://github.com/obiedeh">GitHub ↗</a>
+      </header>
+
+      <section class="case-hero shell" id="top">
+        <div class="eyebrow"><span></span> Physical AI · Jetson · Sim-to-real evidence</div>
+        <h1>Closing the gap between <em>simulation</em> and hardware constraints.</h1>
+        <p class="lead">This case study presents the measurements behind the Physical AI program: what runs on Jetson hardware, what remains simulation evidence, what was corrected, and what is still not established.</p>
+        <div class="case-meta" aria-label="Case study summary">
+          <div>
+            <span>Hardware</span>
+            <strong>Jetson AGX Thor 128GB and Jetson Orin NX</strong>
+          </div>
+          <div>
+            <span>Dates</span>
+            <strong>2026-08-20 measurements, 2026-09-07 corrections</strong>
+          </div>
+          <div>
+            <span>Scope</span>
+            <strong>Inference, probes, simulation validation, correction ledger</strong>
+          </div>
+        </div>
+      </section>
+
+      <section class="case-section shell">
+        <div class="case-grid">
+          <div class="section-kicker">// PROBLEM</div>
+          <div class="case-copy">
+            <h2>A program has to survive contact with the machine.</h2>
+            <p>The core problem was closing the gap between a simulator workflow and a system that runs on real edge hardware under timing, power, thermal, camera, and safety constraints.</p>
+            <p>The repo is not treated as proof by itself. The useful evidence is the committed record: device identity, runtime versions, power mode, timing distributions, thermal samples, simulation summaries, and corrections when a claim failed inspection.</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="case-section shell">
+        <div class="case-grid">
+          <div class="section-kicker">// BUILT</div>
+          <div class="case-copy">
+            <h2>What was built.</h2>
+            <ul>
+              <li>A Jetson AGX Thor path for GR00T eager and TensorRT inference benchmarking.</li>
+              <li>An Orin NX hardware probe path for CUDA fp16 matmul, V4L2 camera timing, thermal, and power readings.</li>
+              <li>An Isaac Sim Ludo pick-and-place executor with provenance, per-attempt records, summaries, and correction sidecars.</li>
+              <li>Evidence charts generated from committed repo artifacts rather than notebook-only screenshots.</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <section class="case-section shell">
+        <div class="case-grid">
+          <div class="section-kicker">// MEASUREMENTS</div>
+          <div class="case-copy">
+            <h2>Thor leads the evidence.</h2>
+            <p>On 2026-08-20, Jetson AGX Thor 128GB in 120W mode ran 100 timed GR00T iterations after 10 warmups, BF16, batch 1. PyTorch eager measured 126.6 ms median end-to-end, or 7.9 Hz. The recovered TensorRT path measured 101.6 ms median end-to-end, or 9.8 Hz. The same run recorded 42.0 C GPU peak, 38.218 C sustained median, VDD_GPU peak 10,676 mW, VIN total peak 39,937 mW, and no observed throttling.</p>
+            <div class="metric-band" aria-label="Thor measurement highlights">
+              <div>
+                <strong>126.6 ms</strong>
+                <span>PyTorch eager median, AGX Thor, 2026-08-20</span>
+              </div>
+              <div>
+                <strong>101.6 ms</strong>
+                <span>TensorRT median, same run conditions</span>
+              </div>
+              <div>
+                <strong>9.8 Hz</strong>
+                <span>TensorRT throughput from median latency</span>
+              </div>
+              <div>
+                <strong>42.0 C</strong>
+                <span>GPU thermal peak, no observed throttling</span>
+              </div>
+            </div>
+            <div class="chart-grid">
+              <figure class="chart-panel">
+                <img src="/assets/evidence/thor_latency.svg" alt="Thor latency chart showing PyTorch eager median 126.6 ms and TensorRT median 101.6 ms">
+                <figcaption>Thor end-to-end latency, sourced from `reports/thor_trt_benchmark/thor_trt_benchmark.json`.</figcaption>
+              </figure>
+              <figure class="chart-panel">
+                <img src="/assets/evidence/thor_components.svg" alt="Thor component timing chart with data processing, backbone, and action head timings">
+                <figcaption>Component timing from the same Thor benchmark. Data processing stayed 7.95 ms median; TensorRT reduced backbone and action-head time.</figcaption>
+              </figure>
+              <figure class="chart-panel">
+                <img src="/assets/evidence/thor_thermal_power.svg" alt="Thor thermal and recorded rail peak chart">
+                <figcaption>Thermal samples and recorded rail peaks from the Thor benchmark artifacts.</figcaption>
+              </figure>
+              <figure class="chart-panel">
+                <img src="/assets/evidence/ludo_placement.svg" alt="Ludo placement chart comparing pre-fix and post-fix simulation groups">
+                <figcaption>Simulation placement grouped by configuration: post-fix seeds 10-12 recorded 35/36 turn-level successes and 19.2 mm p50 error.</figcaption>
+              </figure>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="case-section shell">
+        <div class="case-grid">
+          <div class="section-kicker">// CORRECTIONS</div>
+          <div class="case-copy">
+            <h2>What went wrong and what was corrected.</h2>
+            <p>The 128 ms / 7.8 Hz TensorRT attribution was retracted. It was a torch.compile baseline from a run where the TensorRT stage failed on a missing Matplotlib import. The corrected Thor TensorRT measurement is 101.6 ms median / 9.8 Hz, and numerical parity with PyTorch remains unrecorded.</p>
+            <p>The GR00T eval01 placement result was also corrected. A raw geometric success counted an untouched cup as successful. The corrected rule requires a grasp, making the result 0/20 corrected. The target was not observable to the policy, so the placement error is not used as a fair goal-conditioned comparison.</p>
+            <figure class="chart-panel">
+              <img src="/assets/evidence/gr00t_correction.svg" alt="Correction chart showing old geometric rule and corrected grasp-required rule">
+              <figcaption>Correction record from `reports/ludo_groot17_eval01/session_summary_corrected.json` and `docs/SYNRIA_EXPERIMENT_LEDGER.md`.</figcaption>
+            </figure>
+          </div>
+        </div>
+      </section>
+
+      <section class="case-section shell">
+        <div class="case-grid">
+          <div class="section-kicker">// DEMO VIDEO</div>
+          <div class="case-copy">
+            <h2>The demo is simulation evidence.</h2>
+            <p>The video shows the Ludo simulation workflow, not autonomous physical-arm proof. It belongs beside the simulation placement records, not beside the Thor hardware inference benchmark.</p>
+            <div class="video-panel">
+              <video controls preload="metadata" src="/assets/evidence/ludo_demo.mp4"></video>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="case-section shell">
+        <div class="case-grid">
+          <div class="section-kicker">// LIMITS AND NEXT</div>
+          <div class="case-copy">
+            <h2>What is not established.</h2>
+            <ul>
+              <li>Autonomous real-arm pick and place is not established.</li>
+              <li>TensorRT/PyTorch numerical parity is not recorded.</li>
+              <li>The Thor and Orin measurements are short runs, not sustained thermal or safety validation.</li>
+              <li>Physical object-success ground truth is not established for the command-derived hardware path.</li>
+            </ul>
+            <p>Next work is a parity run with recorded tolerances, sustained thermal and safety validation, and a physical manipulation run with observed object-success ground truth.</p>
+            <div class="source-list case-copy">
+              <p>Primary sources: <a href="https://github.com/obiedeh/physical-ai-jetson-robotics/blob/main/reports/thor_trt_benchmark/thor_trt_benchmark.json">Thor benchmark JSON</a>, <a href="https://github.com/obiedeh/physical-ai-jetson-robotics/blob/main/reports/thor_trt_benchmark/thermal_samples.json">Thor thermal samples</a>, <a href="https://github.com/obiedeh/physical-ai-jetson-robotics/blob/main/reports/jetson/yahboom_day_one/day_one_smoke.json">Orin day-one smoke JSON</a>, <a href="https://github.com/obiedeh/physical-ai-jetson-robotics/blob/main/reports/ludo_stats_frozen/stats_2026-08-20T050701Z_reports_ludo_soak_s1%5B012%5D.json">Ludo post-fix stats</a>, <a href="https://github.com/obiedeh/physical-ai-jetson-robotics/blob/main/reports/ludo_groot17_eval01/session_summary_corrected.json">GR00T correction sidecar</a>, <a href="https://github.com/obiedeh/physical-ai-jetson-robotics/blob/main/docs/PIPELINE.md">pipeline notes</a>, <a href="https://github.com/obiedeh/physical-ai-jetson-robotics/blob/main/docs/JETSON_DEPLOYMENT.md">Jetson deployment notes</a>, and <a href="https://github.com/obiedeh/physical-ai-jetson-robotics/blob/main/reports/NOT_CLAIMED.md">not-established claims</a>.</p>
+            </div>
+            <div class="evidence-links">
+              <a href="https://github.com/obiedeh/physical-ai-jetson-robotics">Repository ↗</a>
+              <a href="https://github.com/obiedeh/physical-ai-jetson-robotics/tree/main/docs/evidence">docs/evidence ↗</a>
+              <a href="https://github.com/obiedeh/physical-ai-jetson-robotics/tree/main/reports">reports ↗</a>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <footer id="contact">
+        <div class="shell footer-grid">
+          <div>
+            <div class="section-kicker">// CONTACT</div>
+            <h2>Let’s build something that can leave the lab.</h2>
+            <p class="contact-intent">Open to leading AI systems work where teams need measurable edge, robotics, and operational evidence.</p>
+          </div>
+          <div class="contact-links">
+            <a href="mailto:obiedeh@gmail.com">obiedeh@gmail.com <span>↗</span></a>
+            <a href="https://www.linkedin.com/in/obinna-edeh-206306137/">linkedin.com/in/obinna-edeh <span>↗</span></a>
+            <a href="https://github.com/obiedeh">github.com/obiedeh <span>↗</span></a>
+          </div>
+        </div>
+        <div class="shell footer-bottom">
+          <span>© 2026 Obinna Edeh</span>
+          <a href="#top">Back to top ↑</a>
+        </div>
+      </footer>
+    </main>
+  </body>
+</html>
