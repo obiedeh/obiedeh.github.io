@@ -1,0 +1,525 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Physical AI Safety Observability Case Study - Obinna Edeh</title>
+    <meta name="description" content="Runtime safety observability case study: worker overhead, Cosmos-Reason2 inference cost and constrained-output findings measured on Jetson AGX Thor, with every number tied to a committed artifact.">
+    <link rel="stylesheet" href="/assets/index-headshot-e6ddef4.css">
+    <link rel="shortcut icon" href="/favicon.svg">
+    <link rel="icon" href="/favicon.svg">
+    <style>
+      .case-hero {
+        border-bottom: 1px solid var(--line);
+        min-height: auto;
+        padding: 94px 0 86px;
+      }
+
+      .case-hero h1 {
+        letter-spacing: -.065em;
+        max-width: 1100px;
+        margin: 32px 0 34px;
+        font-size: clamp(52px, 7vw, 104px);
+        font-weight: 500;
+        line-height: .94;
+      }
+
+      .case-hero h1 em {
+        color: var(--lime);
+        font-style: normal;
+      }
+
+      .case-hero .lead {
+        max-width: 780px;
+        color: var(--muted);
+        margin: 0;
+        font-size: 20px;
+        line-height: 1.65;
+      }
+
+      .case-meta {
+        border-top: 1px solid var(--line);
+        border-bottom: 1px solid var(--line);
+        grid-template-columns: repeat(3, 1fr);
+        margin-top: 48px;
+        display: grid;
+      }
+
+      .case-meta div {
+        border-right: 1px solid var(--line);
+        padding: 20px 24px 20px 0;
+      }
+
+      .case-meta div + div {
+        padding-left: 24px;
+      }
+
+      .case-meta div:last-child {
+        border-right: 0;
+      }
+
+      .case-meta span,
+      .case-meta strong {
+        display: block;
+      }
+
+      .case-meta span {
+        font: 10px var(--font-geist-mono), monospace;
+        letter-spacing: .1em;
+        color: #687069;
+        margin-bottom: 8px;
+        text-transform: uppercase;
+      }
+
+      .case-meta strong {
+        color: var(--muted);
+        font-size: 14px;
+        font-weight: 600;
+      }
+
+      .case-section {
+        border-top: 1px solid var(--line);
+        padding: 96px 0;
+      }
+
+      .case-grid {
+        grid-template-columns: .42fr 1fr;
+        gap: 70px;
+        display: grid;
+      }
+
+      .case-copy h2 {
+        letter-spacing: -.045em;
+        margin: 0 0 24px;
+        font-size: clamp(34px, 4vw, 56px);
+        font-weight: 500;
+        line-height: 1;
+      }
+
+      .case-copy p,
+      .case-copy li {
+        color: var(--muted);
+        font-size: 17px;
+        line-height: 1.75;
+      }
+
+      .case-copy p {
+        margin: 0 0 22px;
+      }
+
+      .case-copy ul {
+        display: grid;
+        gap: 14px;
+      }
+
+      .metric-band {
+        border-top: 1px solid #68b7ff33;
+        border-bottom: 1px solid #68b7ff33;
+        grid-template-columns: repeat(4, 1fr);
+        margin: 36px 0 30px;
+        display: grid;
+      }
+
+      .metric-band div {
+        border-right: 1px solid #68b7ff29;
+        padding: 24px 18px 24px 0;
+      }
+
+      .metric-band div + div {
+        padding-left: 20px;
+      }
+
+      .metric-band div:last-child {
+        border-right: 0;
+      }
+
+      .metric-band strong,
+      .metric-band span {
+        display: block;
+      }
+
+      .metric-band strong {
+        color: var(--ink);
+        font-size: 24px;
+      }
+
+      .metric-band span {
+        color: #8eaab3;
+        margin-top: 7px;
+        font-size: 12px;
+        line-height: 1.5;
+      }
+
+      .chart-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 24px;
+        display: grid;
+      }
+
+      .chart-panel {
+        background: #1b2629;
+        border: 1px solid #68b7ff52;
+        padding: 18px;
+        box-shadow: inset 0 1px #68b7ff1f;
+      }
+
+      .chart-panel img {
+        width: 100%;
+        height: auto;
+      }
+
+      .chart-panel figcaption {
+        color: var(--muted);
+        margin-top: 14px;
+        font-size: 13px;
+        line-height: 1.55;
+      }
+
+      .media-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 24px;
+        margin-top: 34px;
+        display: grid;
+      }
+
+      .media-panel {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        padding: 18px;
+        box-shadow: inset 0 1px #ffffff14;
+      }
+
+      .media-panel img {
+        aspect-ratio: 4 / 3;
+        object-fit: cover;
+        width: 100%;
+        height: auto;
+        display: block;
+        background: #090b0a;
+      }
+
+      .media-panel figcaption {
+        color: var(--muted);
+        margin-top: 14px;
+        font-size: 13px;
+        line-height: 1.55;
+      }
+
+      .video-panel {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        padding: 18px;
+      }
+
+      .video-panel video {
+        width: 100%;
+        background: #090b0a;
+      }
+
+      .evidence-links {
+        flex-wrap: wrap;
+        gap: 12px;
+        display: flex;
+      }
+
+      .evidence-links a {
+        border: 1px solid var(--line);
+        color: var(--ink);
+        padding: 13px 16px;
+        font-size: 14px;
+        font-weight: 700;
+      }
+
+      .evidence-links a:hover {
+        color: var(--lime);
+      }
+
+      .source-list {
+        border-top: 1px solid var(--line);
+        margin-top: 26px;
+        padding-top: 22px;
+      }
+
+      .source-list a {
+        color: var(--blue);
+      }
+
+      .case-grid > *,
+      .case-copy,
+      .source-list,
+      .evidence-links {
+        min-width: 0;
+        max-width: 100%;
+        overflow-wrap: anywhere;
+      }
+
+      @media (width <= 760px) {
+        .case-hero {
+          padding-top: 62px;
+        }
+
+        .case-hero h1 {
+          font-size: 52px;
+        }
+
+        .case-meta,
+        .case-grid,
+        .metric-band,
+        .chart-grid,
+        .media-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .case-meta div,
+        .case-meta div + div,
+        .metric-band div,
+        .metric-band div + div {
+          border-right: 0;
+          border-bottom: 1px solid var(--line);
+          padding: 18px 0;
+        }
+
+        .case-meta div:last-child,
+        .metric-band div:last-child {
+          border-bottom: 0;
+        }
+
+        .case-section {
+          padding: 78px 0;
+        }
+
+        .chart-panel {
+          padding: 10px;
+          overflow-x: auto;
+        }
+
+        .chart-panel img {
+          min-width: 0;
+          width: 100%;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <header class="nav shell">
+        <a class="brand" href="/#top" aria-label="Obinna Edeh home">
+          <span class="brand-mark">OE</span>
+          <span>Obinna Edeh</span>
+        </a>
+        <nav aria-label="Primary navigation">
+          <a href="/#work">Work</a>
+          <a href="/#approach">About</a>
+          <a href="/#contact">Contact</a>
+        </nav>
+        <a class="nav-cta" href="https://github.com/obiedeh">GitHub ↗</a>
+      </header>
+
+      <section class="case-hero shell" id="top">
+        <div class="eyebrow"><span></span> Runtime safety · Jetson AGX Thor · Vision-language models</div>
+        <h1>A safety layer that <em>measures itself</em> before it judges a robot.</h1>
+        <p class="lead">Structured safety events, a policy engine for PPE, zones and proximity, and an operator review API. Measured on Jetson AGX Thor for what it costs to run, then pushed through a real vision-language model to find out what it gets wrong.</p>
+        <div class="case-meta" aria-label="Case study summary">
+          <div>
+            <span>Hardware</span>
+            <strong>Jetson AGX Thor Developer Kit, tegra264, L4T R38.4.0, 120W; Cosmos-Reason2-2B and 8B served by vLLM 0.14 on device</strong>
+          </div>
+          <div>
+            <span>Dates</span>
+            <strong>2026-09-09 measurements, ten run artifacts</strong>
+          </div>
+          <div>
+            <span>Scope</span>
+            <strong>Runtime overhead and inference cost on simulation footage. Detection quality is not measured: no ground truth exists yet.</strong>
+          </div>
+        </div>
+      </section>
+
+      <section class="case-section shell">
+        <div class="case-grid">
+          <div class="section-kicker">// PIPELINE</div>
+          <div class="case-copy">
+            <h2>Frames in, reviewable events out.</h2>
+            <p>An edge worker samples frames from a source, asks a model adapter for detections, evaluates them against the safety policy, and posts structured safety events to a FastAPI backend with an operator review queue. Every event carries the rule, severity, confidence, a human-review flag and its evidence.</p>
+            <p>The adapter boundary is the point of the design. A deterministic mock adapter measures the pipeline alone. An OpenAI-compatible adapter puts a real vision-language model behind the same interface, so the same run artifact records both the runtime cost and what the model returned.</p>
+            <p>Every run writes one JSON artifact with device provenance, per-frame timings, token usage, event and detection counts, peak memory and a 1 Hz tegrastats summary. Nothing on this page is typed by hand.</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="case-section shell">
+        <div class="case-grid">
+          <div class="section-kicker">// BUILT</div>
+          <div class="case-copy">
+            <h2>What was built.</h2>
+            <ul>
+              <li>Safety event schema and policy engine: PPE missing, zone intrusion, human-robot proximity, with severity, confidence gating and human-review flags.</li>
+              <li>Edge worker with mock, OpenAI-compatible and Cosmos-Reason2 adapters; batched event posting; run reports with provenance.</li>
+              <li>FastAPI backend with SQLite store, single and batch event endpoints, operator review, and Alembic migrations.</li>
+              <li>Run recorder and tegrastats sampler that turn each run into a committed artifact; an evidence page generated from those artifacts.</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <section class="case-section shell">
+        <div class="case-grid">
+          <div class="section-kicker">// THOR EVIDENCE</div>
+          <div class="case-copy">
+            <h2>The pipeline keeps camera rate; the backend does not.</h2>
+            <p>With the mock adapter at 30 fps pacing, the worker sustained 28.588 frames/s over 1800 frames with rule evaluation at 0.9877 ms p95 and board power at the idle level, 24,604 mW p50 (`reports/thor/mock_30fps_no_post.json`). Posting each event to the backend synchronously dropped throughput to 4.357 frames/s at 160.9 ms per frame; batching a frame's events into one request lifted it to 7.075 frames/s at 68.2 ms (`mock_30fps_backend.json`, `mock_30fps_backend_batched.json`).</p>
+            <p>Cosmos-Reason2-2B served by vLLM on the same device cost 4.35 s p50 and 12.85 s p95 per frame with its reasoning block, at 66.6 W board power (`cosmos2b_video_60.json`). Reasoning length drove the tail: the slowest frames produced near 1000 completion tokens at about 61 tokens/s.</p>
+            <div class="metric-band" aria-label="Thor safety runtime highlights">
+              <div>
+                <strong>28.588 frames/s</strong>
+                <span>Worker at 30 fps pacing, mock model, 1800 frames</span>
+              </div>
+              <div>
+                <strong>0.9877 ms</strong>
+                <span>Rule evaluation p95 per frame</span>
+              </div>
+              <div>
+                <strong>4.357 to 7.075 frames/s</strong>
+                <span>Backend posting, per event versus one batch per frame</span>
+              </div>
+              <div>
+                <strong>4.35 s p50</strong>
+                <span>Cosmos-Reason2-2B per frame, think block on, 66.6 W</span>
+              </div>
+            </div>
+            <div class="chart-grid">
+              <figure class="chart-panel">
+                <img src="https://obiedeh.github.io/physical-ai-safety-observability/reports/charts/mock_fps.svg" alt="Worker throughput per mock run on Thor, log scale" loading="lazy">
+                <figcaption>Worker throughput per run, from the mock-adapter artifacts under `reports/thor/`. Served from the repository's evidence page.</figcaption>
+              </figure>
+              <figure class="chart-panel">
+                <img src="https://obiedeh.github.io/physical-ai-safety-observability/reports/charts/model_latency.svg" alt="Cosmos-Reason2 inference latency p50 and p95 per run on Thor" loading="lazy">
+                <figcaption>Per-frame inference latency, p50 and p95, for the six Cosmos-Reason2 runs.</figcaption>
+              </figure>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="case-section shell">
+        <div class="case-grid">
+          <div class="section-kicker">// CONSTRAINED OUTPUT</div>
+          <div class="case-copy">
+            <h2>The grammar fixed the vocabulary and exposed the real problem.</h2>
+            <p>Four runs on the same 60 frames. Disabling the think block halved the p95 to 6.58 s. Adding a JSON-schema grammar to the decoder removed every out-of-vocabulary label, 59 before, 0 after, and brought the p50 to 2.69 s and p95 to 3.36 s (`cosmos2b_video_60_schema.json`). It also made the 2B report six persons on footage that has none, and five of those tripped PPE and proximity rules: seven false safety events.</p>
+            <p>Cosmos-Reason2-8B under the same grammar and prompt reported zero persons and zero events on the same frames at 3.20 s p50 (`cosmos8b_video_60_schema.json`), decoding at roughly 13 tokens/s against 60 for the 2B. Sixty frames of one video is a signal, not a rate. A server detail is recorded too: with vLLM's `--reasoning-parser qwen3` enabled, `response_format` JSON schema was accepted but not enforced, so the constrained runs used a second container without the parser.</p>
+            <div class="metric-band" aria-label="Constrained output findings">
+              <div>
+                <strong>59 to 0</strong>
+                <span>Out-of-vocabulary labels before and after the grammar, 2B</span>
+              </div>
+              <div>
+                <strong>2.69 s p50</strong>
+                <span>2B under the grammar, from 4.35 s</span>
+              </div>
+              <div>
+                <strong>6 persons, 7 events</strong>
+                <span>2B on people-free footage, all false</span>
+              </div>
+              <div>
+                <strong>0 persons, 0 events</strong>
+                <span>8B under the same grammar, 3.20 s p50</span>
+              </div>
+            </div>
+            <div class="chart-grid">
+              <figure class="chart-panel">
+                <img src="https://obiedeh.github.io/physical-ai-safety-observability/reports/charts/model_quality.svg" alt="Out-of-vocabulary labels, phantom persons and false events per Cosmos-Reason2 run" loading="lazy">
+                <figcaption>Vocabulary compliance and phantom persons per run, counts over 60 frames.</figcaption>
+              </figure>
+              <figure class="chart-panel">
+                <img src="https://obiedeh.github.io/physical-ai-safety-observability/reports/charts/power.svg" alt="Board input power p50 per run on Thor" loading="lazy">
+                <figcaption>Board input power at p50 per run; about 24 W is the device's idle level, the model runs sit near 60 to 70 W.</figcaption>
+              </figure>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="case-section shell">
+        <div class="case-grid">
+          <div class="section-kicker">// CORRECTIONS</div>
+          <div class="case-copy">
+            <h2>What went wrong and what was corrected.</h2>
+            <p>The first real-model run failed at frame 26 on a 60 s adapter timeout; the log is kept (`cosmos2b_video_60_attempt1_timeout.log`), the timeout became a command-line option, and a failed run now writes a partial artifact with its error. With the grammar and the original prompt, which still asked for an `&lt;answer&gt;` wrapper the grammar forbids, the model emitted an empty list on every frame; that run is kept as `cosmos2b_video_60_schema_v1prompt.json` and the prompt was rewritten for JSON-only output.</p>
+            <p>The unconstrained 2B echoed the schema string itself as a label on 12 detections. That is in the artifact, not edited out.</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="case-section shell">
+        <div class="case-grid">
+          <div class="section-kicker">// LIMITS AND NEXT</div>
+          <div class="case-copy">
+            <h2>What is not established.</h2>
+            <ul>
+              <li>No precision or recall for any rule. There is no labelled ground truth, so the false events above are counted, not rated.</li>
+              <li>No real camera input; the footage is an Isaac Sim recording with no people in it.</li>
+              <li>Runs are 60 to 390 seconds, not sustained operation.</li>
+              <li>No operator dashboard; review is through the API.</li>
+              <li>Zone geometry is configured, not derived from calibration.</li>
+            </ul>
+            <p>Next work is authored simulation scenes with known PPE and zone states so both model sizes get a precision and recall, asynchronous event posting, and a live camera source.</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="case-section shell">
+        <div class="case-grid">
+          <div class="section-kicker">// OPEN THE EVIDENCE</div>
+          <div class="case-copy">
+            <h2>Evidence page and raw records.</h2>
+            <p>The evidence page is generated from the committed run artifacts by the repository's own script and served by GitHub Pages; every row links to its JSON.</p>
+            <div class="evidence-links">
+              <a href="https://obiedeh.github.io/physical-ai-safety-observability/reports/index.html">Thor evidence page ↗</a>
+              <a href="https://github.com/obiedeh/physical-ai-safety-observability/tree/main/reports/thor">Run artifacts, reports/thor/ ↗</a>
+              <a href="https://github.com/obiedeh/physical-ai-safety-observability#measured-on-jetson-agx-thor-2026-09-09">README measured section ↗</a>
+              <a href="https://github.com/obiedeh/physical-ai-safety-observability/blob/main/docs/handoff-2026-09-09.md">Handoff, 2026-09-09 ↗</a>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="case-section shell">
+        <div class="case-grid">
+          <div class="section-kicker">// SOURCES</div>
+          <div class="case-copy">
+            <h2>Sources and links.</h2>
+            <div class="source-list case-copy">
+              <p>Raw records: <a href="https://github.com/obiedeh/physical-ai-safety-observability/blob/main/reports/thor/mock_30fps_no_post.json">mock_30fps_no_post.json</a>, <a href="https://github.com/obiedeh/physical-ai-safety-observability/blob/main/reports/thor/mock_30fps_backend.json">mock_30fps_backend.json</a>, <a href="https://github.com/obiedeh/physical-ai-safety-observability/blob/main/reports/thor/mock_30fps_backend_batched.json">mock_30fps_backend_batched.json</a>, <a href="https://github.com/obiedeh/physical-ai-safety-observability/blob/main/reports/thor/cosmos2b_video_60.json">cosmos2b_video_60.json</a>, <a href="https://github.com/obiedeh/physical-ai-safety-observability/blob/main/reports/thor/cosmos2b_video_60_nothink.json">cosmos2b_video_60_nothink.json</a>, <a href="https://github.com/obiedeh/physical-ai-safety-observability/blob/main/reports/thor/cosmos2b_video_60_schema.json">cosmos2b_video_60_schema.json</a>, <a href="https://github.com/obiedeh/physical-ai-safety-observability/blob/main/reports/thor/cosmos8b_video_60_schema.json">cosmos8b_video_60_schema.json</a>, <a href="https://github.com/obiedeh/physical-ai-safety-observability/blob/main/reports/thor/cosmos8b_video_60_nothink.json">cosmos8b_video_60_nothink.json</a>. Each has a `_tegrastats.jsonl` sidecar and a run log beside it.</p>
+            </div>
+            <div class="evidence-links">
+              <a href="https://github.com/obiedeh/physical-ai-safety-observability">Safety observability repository ↗</a>
+              <a href="https://obiedeh.github.io/physical-ai-safety-observability/reports/index.html">Evidence page ↗</a>
+              <a href="/physical-ai-jetson-robotics.html">Physical AI case study ↗</a>
+              <a href="/jetson-edge-ai-security.html">Edge security case study ↗</a>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <footer id="contact">
+        <div class="shell footer-grid">
+          <div>
+            <div class="section-kicker">// CONTACT</div>
+            <h2>Let’s build something that can leave the lab.</h2>
+            <p class="contact-intent">Open to leading AI systems work where teams need measurable edge, robotics, and operational evidence.</p>
+          </div>
+          <div class="contact-links">
+            <a href="mailto:obiedeh@gmail.com">obiedeh@gmail.com <span>↗</span></a>
+            <a href="https://www.linkedin.com/in/obinna-edeh-206306137/">linkedin.com/in/obinna-edeh <span>↗</span></a>
+            <a href="https://github.com/obiedeh">github.com/obiedeh <span>↗</span></a>
+          </div>
+        </div>
+        <div class="shell footer-bottom">
+          <span>© 2026 Obinna Edeh</span>
+          <a href="#top">Back to top ↑</a>
+        </div>
+      </footer>
+    </main>
+  </body>
+</html>
