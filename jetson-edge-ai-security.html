@@ -453,6 +453,16 @@
                 <span>MLP on sample data</span>
               </div>
             </div>
+            <div class="chart-grid">
+              <figure class="chart-panel">
+                <img src="https://obiedeh.github.io/ai-ran-kpi-forecasting/reports/model_comparison/comparison_overlay.svg" alt="Overlay of Ridge, gradient boosting and MLP forecasts against the hold-out on the synthetic sample" loading="lazy">
+                <figcaption>Three-model overlay on the synthetic sample, served from the AI-RAN evidence portal: `reports/model_comparison/comparison_overlay.svg`. Sample-data validation, not accuracy on public telecom data.</figcaption>
+              </figure>
+              <figure class="chart-panel">
+                <img src="https://obiedeh.github.io/ai-ran-kpi-forecasting/reports/forecast_examples/latest/prb_dl_util_forecast.svg" alt="Ridge forecast of PRB downlink utilisation for CELL_001 with a 24-step horizon on the synthetic sample" loading="lazy">
+                <figcaption>Ridge forecast of `prb_dl_util` for CELL_001, horizon 24, from `reports/forecast_examples/latest/prb_dl_util_forecast.svg` on the same portal.</figcaption>
+              </figure>
+            </div>
           </div>
         </div>
       </section>
@@ -488,12 +498,39 @@
 
       <section class="case-section shell">
         <div class="case-grid">
+          <div class="section-kicker">// OPEN THE EVIDENCE</div>
+          <div class="case-copy">
+            <h2>Dashboards and evidence pages.</h2>
+            <p>Every page below is generated from committed artifacts in its repository and served by GitHub Pages, so it opens rendered rather than as source. The security pages are rebuilt from the JSON records by the repo's report generator; the AI-RAN pages are rebuilt by its portal and publish targets.</p>
+            <p><strong>Edge security</strong></p>
+            <div class="evidence-links">
+              <a href="https://obiedeh.github.io/jetson-edge-ai-security/reports/index.html">Evidence landing page ↗</a>
+              <a href="https://obiedeh.github.io/jetson-edge-ai-security/reports/dashboard.html">Operator dashboard ↗</a>
+              <a href="https://obiedeh.github.io/jetson-edge-ai-security/reports/tech-brief.html">Technical brief ↗</a>
+              <a href="https://obiedeh.github.io/jetson-edge-ai-security/reports/business-case.html">Business case ↗</a>
+            </div>
+            <p><strong>AI-RAN KPI forecasting</strong></p>
+            <div class="evidence-links">
+              <a href="https://obiedeh.github.io/ai-ran-kpi-forecasting/reports/index.html">Evidence portal ↗</a>
+              <a href="https://obiedeh.github.io/ai-ran-kpi-forecasting/reports/dashboard.html">Dashboard ↗</a>
+              <a href="https://obiedeh.github.io/ai-ran-kpi-forecasting/reports/publish/latest/index.html">Published report ↗</a>
+              <a href="https://obiedeh.github.io/ai-ran-kpi-forecasting/reports/scenarios/latest/congestion/dashboard/dashboard.html">Congestion scenario ↗</a>
+              <a href="https://obiedeh.github.io/ai-ran-kpi-forecasting/reports/scenarios/latest/backhaul/dashboard/dashboard.html">Backhaul saturation scenario ↗</a>
+              <a href="https://obiedeh.github.io/ai-ran-kpi-forecasting/reports/scenarios/latest/outage/dashboard/dashboard.html">Cell outage scenario ↗</a>
+              <a href="https://obiedeh.github.io/ai-ran-kpi-forecasting/reports/model_comparison/comparison_overlay.svg">Model comparison overlay ↗</a>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="case-section shell">
+        <div class="case-grid">
           <div class="section-kicker">// SOURCES</div>
           <div class="case-copy">
             <h2>Sources and links.</h2>
             <div class="source-list case-copy">
-              <p>Security sources: <a href="https://github.com/obiedeh/jetson-edge-ai-security/blob/main/reports/thor_benchmark.json">reports/thor_benchmark.json</a>, <a href="https://github.com/obiedeh/jetson-edge-ai-security/blob/main/reports/thor_benchmark_tegrastats.jsonl">reports/thor_benchmark_tegrastats.jsonl</a>, <a href="https://github.com/obiedeh/jetson-edge-ai-security/blob/main/reports/thor_benchmark_threads.json">reports/thor_benchmark_threads.json</a>, <a href="https://github.com/obiedeh/jetson-edge-ai-security/tree/main/reports/thor_threads">reports/thor_threads/</a>, <a href="https://github.com/obiedeh/jetson-edge-ai-security/blob/main/reports/training_run.json">reports/training_run.json</a>, <a href="https://github.com/obiedeh/jetson-edge-ai-security/blob/main/docs/publication-plan.md">docs/publication-plan.md</a>, and <a href="https://github.com/obiedeh/jetson-edge-ai-security/blob/main/docs/codex-task-site-page-2026-09-08.md">docs/codex-task-site-page-2026-09-08.md</a>.</p>
-              <p>AI-RAN sources: <a href="https://github.com/obiedeh/ai-ran-kpi-forecasting/blob/main/reports/model_comparison/comparison_metrics.csv">reports/model_comparison/comparison_metrics.csv</a>, <a href="https://github.com/obiedeh/ai-ran-kpi-forecasting/blob/main/models/exports/manifest.json">models/exports/manifest.json</a>, and <a href="https://github.com/obiedeh/ai-ran-kpi-forecasting/blob/main/docs/handoff-2026-09-08.md">docs/handoff-2026-09-08.md</a>.</p>
+              <p>Raw records, security: <a href="https://github.com/obiedeh/jetson-edge-ai-security/blob/main/reports/thor_benchmark.json">reports/thor_benchmark.json</a>, <a href="https://github.com/obiedeh/jetson-edge-ai-security/blob/main/reports/thor_benchmark_tegrastats.jsonl">reports/thor_benchmark_tegrastats.jsonl</a>, <a href="https://github.com/obiedeh/jetson-edge-ai-security/blob/main/reports/thor_benchmark_threads.json">reports/thor_benchmark_threads.json</a>, <a href="https://github.com/obiedeh/jetson-edge-ai-security/tree/main/reports/thor_threads">reports/thor_threads/</a>, <a href="https://github.com/obiedeh/jetson-edge-ai-security/blob/main/reports/training_run.json">reports/training_run.json</a>, and <a href="https://github.com/obiedeh/jetson-edge-ai-security/blob/main/docs/publication-plan.md">docs/publication-plan.md</a>.</p>
+              <p>Raw records, AI-RAN: <a href="https://github.com/obiedeh/ai-ran-kpi-forecasting/blob/main/reports/model_comparison/comparison_metrics.csv">reports/model_comparison/comparison_metrics.csv</a>, <a href="https://github.com/obiedeh/ai-ran-kpi-forecasting/blob/main/models/exports/manifest.json">models/exports/manifest.json</a>, and <a href="https://github.com/obiedeh/ai-ran-kpi-forecasting/blob/main/docs/handoff-2026-09-08.md">docs/handoff-2026-09-08.md</a>.</p>
             </div>
             <div class="evidence-links">
               <a href="https://github.com/obiedeh/jetson-edge-ai-security">Security repository ↗</a>
