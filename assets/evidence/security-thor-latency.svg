@@ -1,0 +1,58 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 920 560" role="img" aria-label="Thor IDS latency percentiles by tier">
+<rect width="920" height="560" fill="#1b2629"/>
+<text x="36" y="44" fill="#eef1e8" font-family="Arial, Helvetica, sans-serif" font-size="24" font-weight="700">Thor CPU inference latency by tier</text>
+<text x="36" y="72" fill="#a3aa9c" font-family="Arial, Helvetica, sans-serif" font-size="13">Jetson AGX Thor, CPUExecutionProvider, synthetic tensors, 300 s per tier</text>
+<line x1="86" x2="846" y1="416.0" y2="416.0" stroke="#68b7ff33" stroke-width="1"/>
+<text x="74" y="420.0" text-anchor="end" fill="#a3aa9c" font-family="Arial, Helvetica, sans-serif" font-size="12">0.000</text>
+<line x1="86" x2="846" y1="336.0" y2="336.0" stroke="#68b7ff33" stroke-width="1"/>
+<text x="74" y="340.0" text-anchor="end" fill="#a3aa9c" font-family="Arial, Helvetica, sans-serif" font-size="12">0.065</text>
+<line x1="86" x2="846" y1="256.0" y2="256.0" stroke="#68b7ff33" stroke-width="1"/>
+<text x="74" y="260.0" text-anchor="end" fill="#a3aa9c" font-family="Arial, Helvetica, sans-serif" font-size="12">0.130</text>
+<line x1="86" x2="846" y1="176.0" y2="176.0" stroke="#68b7ff33" stroke-width="1"/>
+<text x="74" y="180.0" text-anchor="end" fill="#a3aa9c" font-family="Arial, Helvetica, sans-serif" font-size="12">0.195</text>
+<line x1="86" x2="846" y1="96.0" y2="96.0" stroke="#68b7ff33" stroke-width="1"/>
+<text x="74" y="100.0" text-anchor="end" fill="#a3aa9c" font-family="Arial, Helvetica, sans-serif" font-size="12">0.260</text>
+<text x="28" y="260" fill="#a3aa9c" font-family="Arial, Helvetica, sans-serif" font-size="12" transform="rotate(-90 28 260)">milliseconds</text>
+<text x="212.66666666666669" y="458" text-anchor="middle" fill="#a3aa9c" font-family="Arial, Helvetica, sans-serif" font-size="13">10 events/s</text>
+<rect x="157.7" y="379.6" width="22" height="36.4" fill="#76B900" opacity="0.68"/>
+<text x="168.7" y="373.6" text-anchor="middle" fill="#eef1e8" font-family="Arial, Helvetica, sans-serif" font-size="10">0.0296</text>
+<rect x="183.7" y="342.7" width="22" height="73.3" fill="#76B900" opacity="1"/>
+<text x="194.7" y="336.7" text-anchor="middle" fill="#eef1e8" font-family="Arial, Helvetica, sans-serif" font-size="10">0.0596</text>
+<rect x="209.7" y="207.4" width="22" height="208.6" fill="#76B900" opacity="0.68"/>
+<text x="220.7" y="201.4" text-anchor="middle" fill="#eef1e8" font-family="Arial, Helvetica, sans-serif" font-size="10">0.1697</text>
+<rect x="235.7" y="143.4" width="22" height="272.6" fill="#192BC2" opacity="0.68"/>
+<text x="246.7" y="137.4" text-anchor="middle" fill="#eef1e8" font-family="Arial, Helvetica, sans-serif" font-size="10">0.2218</text>
+<rect x="261.7" y="140.0" width="22" height="276.0" fill="#192BC2" opacity="1"/>
+<text x="272.7" y="134.0" text-anchor="middle" fill="#eef1e8" font-family="Arial, Helvetica, sans-serif" font-size="10">0.2246</text>
+<rect x="287.7" y="137.7" width="22" height="278.3" fill="#192BC2" opacity="0.68"/>
+<text x="298.7" y="131.7" text-anchor="middle" fill="#eef1e8" font-family="Arial, Helvetica, sans-serif" font-size="10">0.2264</text>
+<text x="466.00000000000006" y="458" text-anchor="middle" fill="#a3aa9c" font-family="Arial, Helvetica, sans-serif" font-size="13">100 events/s</text>
+<rect x="411.0" y="385.3" width="22" height="30.7" fill="#76B900" opacity="0.68"/>
+<text x="422.0" y="379.3" text-anchor="middle" fill="#eef1e8" font-family="Arial, Helvetica, sans-serif" font-size="10">0.0250</text>
+<rect x="437.0" y="347.3" width="22" height="68.7" fill="#76B900" opacity="1"/>
+<text x="448.0" y="341.3" text-anchor="middle" fill="#eef1e8" font-family="Arial, Helvetica, sans-serif" font-size="10">0.0559</text>
+<rect x="463.0" y="284.9" width="22" height="131.1" fill="#76B900" opacity="0.68"/>
+<text x="474.0" y="278.9" text-anchor="middle" fill="#eef1e8" font-family="Arial, Helvetica, sans-serif" font-size="10">0.1067</text>
+<rect x="489.0" y="398.8" width="22" height="17.2" fill="#192BC2" opacity="0.68"/>
+<text x="500.0" y="392.8" text-anchor="middle" fill="#eef1e8" font-family="Arial, Helvetica, sans-serif" font-size="10">0.0140</text>
+<rect x="515.0" y="397.9" width="22" height="18.1" fill="#192BC2" opacity="1"/>
+<text x="526.0" y="391.9" text-anchor="middle" fill="#eef1e8" font-family="Arial, Helvetica, sans-serif" font-size="10">0.0147</text>
+<rect x="541.0" y="395.8" width="22" height="20.2" fill="#192BC2" opacity="0.68"/>
+<text x="552.0" y="389.8" text-anchor="middle" fill="#eef1e8" font-family="Arial, Helvetica, sans-serif" font-size="10">0.0164</text>
+<text x="719.3333333333334" y="458" text-anchor="middle" fill="#a3aa9c" font-family="Arial, Helvetica, sans-serif" font-size="13">1000 events/s</text>
+<rect x="664.3" y="389.8" width="22" height="26.2" fill="#76B900" opacity="0.68"/>
+<text x="675.3" y="383.8" text-anchor="middle" fill="#eef1e8" font-family="Arial, Helvetica, sans-serif" font-size="10">0.0213</text>
+<rect x="690.3" y="386.9" width="22" height="29.1" fill="#76B900" opacity="1"/>
+<text x="701.3" y="380.9" text-anchor="middle" fill="#eef1e8" font-family="Arial, Helvetica, sans-serif" font-size="10">0.0237</text>
+<rect x="716.3" y="381.6" width="22" height="34.4" fill="#76B900" opacity="0.68"/>
+<text x="727.3" y="375.6" text-anchor="middle" fill="#eef1e8" font-family="Arial, Helvetica, sans-serif" font-size="10">0.0280</text>
+<rect x="742.3" y="399.0" width="22" height="17.0" fill="#192BC2" opacity="0.68"/>
+<text x="753.3" y="393.0" text-anchor="middle" fill="#eef1e8" font-family="Arial, Helvetica, sans-serif" font-size="10">0.0138</text>
+<rect x="768.3" y="398.7" width="22" height="17.3" fill="#192BC2" opacity="1"/>
+<text x="779.3" y="392.7" text-anchor="middle" fill="#eef1e8" font-family="Arial, Helvetica, sans-serif" font-size="10">0.0141</text>
+<rect x="794.3" y="398.4" width="22" height="17.6" fill="#192BC2" opacity="0.68"/>
+<text x="805.3" y="392.4" text-anchor="middle" fill="#eef1e8" font-family="Arial, Helvetica, sans-serif" font-size="10">0.0143</text>
+<rect x="620" y="34" width="16" height="16" fill="#76B900"/><text x="644" y="47" fill="#a3aa9c" font-family="Arial, Helvetica, sans-serif" font-size="13">detector</text>
+<rect x="720" y="34" width="16" height="16" fill="#192BC2"/><text x="744" y="47" fill="#a3aa9c" font-family="Arial, Helvetica, sans-serif" font-size="13">forecaster</text>
+<text x="36" y="520" fill="#a3aa9c" font-family="Arial, Helvetica, sans-serif" font-size="12">Source: jetson-edge-ai-security/reports/thor_benchmark.json. Samples per tier: detector 3001/30001/300001, forecaster 3001/30001/300001.</text>
+</svg>
