@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 920 560" role="img" aria-label="Thor board power thread pool comparison">
+<rect width="920" height="560" fill="#1b2629"/>
+<text x="36" y="44" fill="#eef1e8" font-family="Arial, Helvetica, sans-serif" font-size="24" font-weight="700">Thread-pool setting changed board power</text>
+<text x="36" y="72" fill="#a3aa9c" font-family="Arial, Helvetica, sans-serif" font-size="13">Detector at 1000 events/s, CPUExecutionProvider, synthetic tensors, 120 s per run</text>
+<line x1="86" x2="846" y1="404.0" y2="404.0" stroke="#68b7ff33" stroke-width="1"/>
+<text x="74" y="408.0" text-anchor="end" fill="#a3aa9c" font-family="Arial, Helvetica, sans-serif" font-size="12">0</text>
+<line x1="86" x2="846" y1="329.0" y2="329.0" stroke="#68b7ff33" stroke-width="1"/>
+<text x="74" y="333.0" text-anchor="end" fill="#a3aa9c" font-family="Arial, Helvetica, sans-serif" font-size="12">16</text>
+<line x1="86" x2="846" y1="254.0" y2="254.0" stroke="#68b7ff33" stroke-width="1"/>
+<text x="74" y="258.0" text-anchor="end" fill="#a3aa9c" font-family="Arial, Helvetica, sans-serif" font-size="12">31</text>
+<line x1="86" x2="846" y1="179.0" y2="179.0" stroke="#68b7ff33" stroke-width="1"/>
+<text x="74" y="183.0" text-anchor="end" fill="#a3aa9c" font-family="Arial, Helvetica, sans-serif" font-size="12">47</text>
+<line x1="86" x2="846" y1="104.0" y2="104.0" stroke="#68b7ff33" stroke-width="1"/>
+<text x="74" y="108.0" text-anchor="end" fill="#a3aa9c" font-family="Arial, Helvetica, sans-serif" font-size="12">62</text>
+<text x="28" y="265" fill="#a3aa9c" font-family="Arial, Helvetica, sans-serif" font-size="12" transform="rotate(-90 28 265)">watts</text>
+<rect x="216" y="143.1" width="120" height="260.9" fill="#76B900"/>
+<text x="276.0" y="133.1" text-anchor="middle" fill="#eef1e8" font-family="Arial, Helvetica, sans-serif" font-size="18" font-weight="700">54.1 W</text>
+<text x="276.0" y="438" text-anchor="middle" fill="#a3aa9c" font-family="Arial, Helvetica, sans-serif" font-size="13">Default</text>
+<rect x="406" y="286.8" width="120" height="117.2" fill="#192BC2"/>
+<text x="466.0" y="276.8" text-anchor="middle" fill="#eef1e8" font-family="Arial, Helvetica, sans-serif" font-size="18" font-weight="700">24.3 W</text>
+<text x="466.0" y="438" text-anchor="middle" fill="#a3aa9c" font-family="Arial, Helvetica, sans-serif" font-size="13">Single thread</text>
+<rect x="596" y="287.3" width="120" height="116.7" fill="#6e776f"/>
+<text x="656.0" y="277.3" text-anchor="middle" fill="#eef1e8" font-family="Arial, Helvetica, sans-serif" font-size="18" font-weight="700">24.2 W</text>
+<text x="656.0" y="438" text-anchor="middle" fill="#a3aa9c" font-family="Arial, Helvetica, sans-serif" font-size="13">Idle</text>
+<text x="36" y="468" fill="#eef1e8" font-family="Arial, Helvetica, sans-serif" font-size="16" font-weight="700">30 W reduction: 54,102 mW to 24,312 mW, with deadline misses dropping from 16,944 to 0.</text>
+<text x="36" y="520" fill="#a3aa9c" font-family="Arial, Helvetica, sans-serif" font-size="12">Source: jetson-edge-ai-security/reports/thor_benchmark_threads.json. Detector 1000 events/s row, 120 s per run.</text>
+</svg>

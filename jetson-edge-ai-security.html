@@ -1,0 +1,528 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Edge Security and AI-RAN Telemetry Case Study - Obinna Edeh</title>
+    <meta name="description" content="Edge telemetry case study with Jetson AGX Thor IDS measurements, thread-pool power evidence, and AI-RAN sample-data validation.">
+    <link rel="stylesheet" href="/assets/index-headshot-e6ddef4.css">
+    <link rel="shortcut icon" href="/favicon.svg">
+    <link rel="icon" href="/favicon.svg">
+    <style>
+      .case-hero {
+        border-bottom: 1px solid var(--line);
+        min-height: auto;
+        padding: 94px 0 86px;
+      }
+
+      .case-hero h1 {
+        letter-spacing: -.065em;
+        max-width: 1100px;
+        margin: 32px 0 34px;
+        font-size: clamp(52px, 7vw, 104px);
+        font-weight: 500;
+        line-height: .94;
+      }
+
+      .case-hero h1 em {
+        color: var(--lime);
+        font-style: normal;
+      }
+
+      .case-hero .lead {
+        max-width: 780px;
+        color: var(--muted);
+        margin: 0;
+        font-size: 20px;
+        line-height: 1.65;
+      }
+
+      .case-meta {
+        border-top: 1px solid var(--line);
+        border-bottom: 1px solid var(--line);
+        grid-template-columns: repeat(3, 1fr);
+        margin-top: 48px;
+        display: grid;
+      }
+
+      .case-meta div {
+        border-right: 1px solid var(--line);
+        padding: 20px 24px 20px 0;
+      }
+
+      .case-meta div + div {
+        padding-left: 24px;
+      }
+
+      .case-meta div:last-child {
+        border-right: 0;
+      }
+
+      .case-meta span,
+      .case-meta strong {
+        display: block;
+      }
+
+      .case-meta span {
+        font: 10px var(--font-geist-mono), monospace;
+        letter-spacing: .1em;
+        color: #687069;
+        margin-bottom: 8px;
+        text-transform: uppercase;
+      }
+
+      .case-meta strong {
+        color: var(--muted);
+        font-size: 14px;
+        font-weight: 600;
+      }
+
+      .case-section {
+        border-top: 1px solid var(--line);
+        padding: 96px 0;
+      }
+
+      .case-grid {
+        grid-template-columns: .42fr 1fr;
+        gap: 70px;
+        display: grid;
+      }
+
+      .case-copy h2 {
+        letter-spacing: -.045em;
+        margin: 0 0 24px;
+        font-size: clamp(34px, 4vw, 56px);
+        font-weight: 500;
+        line-height: 1;
+      }
+
+      .case-copy p,
+      .case-copy li {
+        color: var(--muted);
+        font-size: 17px;
+        line-height: 1.75;
+      }
+
+      .case-copy p {
+        margin: 0 0 22px;
+      }
+
+      .case-copy ul {
+        display: grid;
+        gap: 14px;
+      }
+
+      .metric-band {
+        border-top: 1px solid #68b7ff33;
+        border-bottom: 1px solid #68b7ff33;
+        grid-template-columns: repeat(4, 1fr);
+        margin: 36px 0 30px;
+        display: grid;
+      }
+
+      .metric-band div {
+        border-right: 1px solid #68b7ff29;
+        padding: 24px 18px 24px 0;
+      }
+
+      .metric-band div + div {
+        padding-left: 20px;
+      }
+
+      .metric-band div:last-child {
+        border-right: 0;
+      }
+
+      .metric-band strong,
+      .metric-band span {
+        display: block;
+      }
+
+      .metric-band strong {
+        color: var(--ink);
+        font-size: 24px;
+      }
+
+      .metric-band span {
+        color: #8eaab3;
+        margin-top: 7px;
+        font-size: 12px;
+        line-height: 1.5;
+      }
+
+      .chart-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 24px;
+        display: grid;
+      }
+
+      .chart-panel {
+        background: #1b2629;
+        border: 1px solid #68b7ff52;
+        padding: 18px;
+        box-shadow: inset 0 1px #68b7ff1f;
+      }
+
+      .chart-panel img {
+        width: 100%;
+        height: auto;
+      }
+
+      .chart-panel figcaption {
+        color: var(--muted);
+        margin-top: 14px;
+        font-size: 13px;
+        line-height: 1.55;
+      }
+
+      .media-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 24px;
+        margin-top: 34px;
+        display: grid;
+      }
+
+      .media-panel {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        padding: 18px;
+        box-shadow: inset 0 1px #ffffff14;
+      }
+
+      .media-panel img {
+        aspect-ratio: 4 / 3;
+        object-fit: cover;
+        width: 100%;
+        height: auto;
+        display: block;
+        background: #090b0a;
+      }
+
+      .media-panel figcaption {
+        color: var(--muted);
+        margin-top: 14px;
+        font-size: 13px;
+        line-height: 1.55;
+      }
+
+      .video-panel {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        padding: 18px;
+      }
+
+      .video-panel video {
+        width: 100%;
+        background: #090b0a;
+      }
+
+      .evidence-links {
+        flex-wrap: wrap;
+        gap: 12px;
+        display: flex;
+      }
+
+      .evidence-links a {
+        border: 1px solid var(--line);
+        color: var(--ink);
+        padding: 13px 16px;
+        font-size: 14px;
+        font-weight: 700;
+      }
+
+      .evidence-links a:hover {
+        color: var(--lime);
+      }
+
+      .source-list {
+        border-top: 1px solid var(--line);
+        margin-top: 26px;
+        padding-top: 22px;
+      }
+
+      .source-list a {
+        color: var(--blue);
+      }
+
+      .case-grid > *,
+      .case-copy,
+      .source-list,
+      .evidence-links {
+        min-width: 0;
+        max-width: 100%;
+        overflow-wrap: anywhere;
+      }
+
+      @media (width <= 760px) {
+        .case-hero {
+          padding-top: 62px;
+        }
+
+        .case-hero h1 {
+          font-size: 52px;
+        }
+
+        .case-meta,
+        .case-grid,
+        .metric-band,
+        .chart-grid,
+        .media-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .case-meta div,
+        .case-meta div + div,
+        .metric-band div,
+        .metric-band div + div {
+          border-right: 0;
+          border-bottom: 1px solid var(--line);
+          padding: 18px 0;
+        }
+
+        .case-meta div:last-child,
+        .metric-band div:last-child {
+          border-bottom: 0;
+        }
+
+        .case-section {
+          padding: 78px 0;
+        }
+
+        .chart-panel {
+          padding: 10px;
+          overflow-x: auto;
+        }
+
+        .chart-panel img {
+          min-width: 0;
+          width: 100%;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <header class="nav shell">
+        <a class="brand" href="/#top" aria-label="Obinna Edeh home">
+          <span class="brand-mark">OE</span>
+          <span>Obinna Edeh</span>
+        </a>
+        <nav aria-label="Primary navigation">
+          <a href="/#work">Work</a>
+          <a href="/#approach">About</a>
+          <a href="/#contact">Contact</a>
+        </nav>
+        <a class="nav-cta" href="https://github.com/obiedeh">GitHub ↗</a>
+      </header>
+
+      <section class="case-hero shell" id="top">
+        <div class="eyebrow"><span></span> Edge telemetry · Jetson AGX Thor · Defensive IDS · AI-RAN</div>
+        <h1>One telemetry <em>pipeline</em> for network flows and radio KPIs.</h1>
+        <p class="lead">This case study shows how the same edge runtime shape can serve defensive network-flow scoring and AI-RAN KPI forecasting while keeping the measured claims tied to committed artifacts.</p>
+        <div class="case-meta" aria-label="Case study summary">
+          <div>
+            <span>Hardware</span>
+            <strong>Jetson AGX Thor Developer Kit, tegra264, JetPack 7 / L4T R38.4.0, 120W, CPU execution provider</strong>
+          </div>
+          <div>
+            <span>Dates</span>
+            <strong>2026-09-08 measurements</strong>
+          </div>
+          <div>
+            <span>Scope</span>
+            <strong>Defensive edge IDS runtime, AI-RAN rApp pattern, inference cost and power on device</strong>
+          </div>
+        </div>
+      </section>
+
+      <section class="case-section shell">
+        <div class="case-grid">
+          <div class="section-kicker">// PIPELINE</div>
+          <div class="case-copy">
+            <h2>One pipeline, two telemetry streams.</h2>
+            <p>The shared shape is typed records, no-leakage windows or lag features, a small ONNX model, and operator-reviewed output. The adapters change between network-flow records and radio KPI rows, but the analytics core stays the same.</p>
+            <p>The two streams belong together at an edge node because capacity pressure and attack behavior can look similar from one side of the system. The runtime has to separate what it can measure from what it can only advise.</p>
+            <p>The boundary is defensive only, advisory only, and no autonomous action.</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="case-section shell">
+        <div class="case-grid">
+          <div class="section-kicker">// BUILT</div>
+          <div class="case-copy">
+            <h2>What was built.</h2>
+            <ul>
+              <li>Security repo: source-agnostic runtime, CSV replay fixture, GBM detector and Ridge forecaster exported to ONNX, Typer CLI, static evidence pack, Thor deployment package, and benchmark harness.</li>
+              <li>AI-RAN repo: Non-RT RIC rApp pattern, KPM-style contracts, Ridge vs GBR vs MLP comparison on temporal splits, advisory A1 policy candidates, and ONNX exports of all three models.</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <section class="case-section shell">
+        <div class="case-grid">
+          <div class="section-kicker">// THOR EVIDENCE</div>
+          <div class="case-copy">
+            <h2>Thor leads the evidence.</h2>
+            <p>On 2026-09-08, run 3cac5ed2b7bd measured Jetson AGX Thor Developer Kit, tegra264, JetPack 7 / L4T R38.4.0, 120W mode, CPUExecutionProvider, synthetic tensors, batch 1, and 300 s per tier at 10, 100, and 1000 events/s. At the 1000 events/s tier, detector p95 was 0.0237 ms, forecaster p95 was 0.0141 ms, achieved rate was 1000.0 events/s, peak process RSS was 0.36 GB, and all four gates passed.</p>
+            <p>The CUDA provider failed on Thor with cudaErrorNoKernelImageForDevice using PyPI onnxruntime-gpu 1.29.0, with no JetPack 7 build on the NVIDIA index. The run fell back to CPU and recorded the provider error. The inputs were synthetic tensors, so this is inference cost, not capture performance.</p>
+            <div class="metric-band" aria-label="Thor IDS measurement highlights">
+              <div>
+                <strong>0.0237 ms</strong>
+                <span>Detector p95, 1000 events/s, CPU, 300 s</span>
+              </div>
+              <div>
+                <strong>0.0141 ms</strong>
+                <span>Forecaster p95, 1000 events/s, CPU, 300 s</span>
+              </div>
+              <div>
+                <strong>1000.0 events/s</strong>
+                <span>Achieved rate at the highest requested tier</span>
+              </div>
+              <div>
+                <strong>0.36 GB</strong>
+                <span>Peak process RSS gate value</span>
+              </div>
+            </div>
+            <div class="chart-grid">
+              <figure class="chart-panel">
+                <img src="/assets/evidence/security-thor-latency.svg" alt="Thor CPU inference latency percentiles by tier for detector and forecaster">
+                <figcaption>Latency percentiles by tier, sourced from `reports/thor_benchmark.json`.</figcaption>
+              </figure>
+              <figure class="chart-panel">
+                <img src="/assets/evidence/security-thread-power.svg" alt="Thor board power comparison for default and single-thread ONNX Runtime settings">
+                <figcaption>Thread-pool power comparison, sourced from `reports/thor_benchmark_threads.json`.</figcaption>
+              </figure>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="case-section shell">
+        <div class="case-grid">
+          <div class="section-kicker">// 30 W FINDING</div>
+          <div class="case-copy">
+            <h2>The strongest result was a runtime setting.</h2>
+            <p>On the same Thor device, `reports/thor_benchmark_threads.json` compares run 1e430379de9b against run 42314e8252e9 with 120 s per tier. At 1000 events/s, the detector drew 54,102 mW with ONNX Runtime defaults and 16,944 pacing misses. With one intra-op thread, one inter-op thread, and spin waiting disabled, it drew 24,312 mW with 0 misses. The idle baseline was 24,212 mW.</p>
+            <p>The detector p95 changed from 0.0238 ms to 0.0219 ms, CPU rail p50 changed from 35,366 mW to 7,469 mW, and junction peak changed from 56.6 C to 40.4 C. The forecaster stayed within 0.2 W either way.</p>
+            <div class="metric-band" aria-label="Thor thread-pool power finding">
+              <div>
+                <strong>54,102 mW</strong>
+                <span>Detector 1000 events/s, default session options</span>
+              </div>
+              <div>
+                <strong>24,312 mW</strong>
+                <span>Detector 1000 events/s, single-thread session options</span>
+              </div>
+              <div>
+                <strong>16,944 to 0</strong>
+                <span>Pacing misses after thread-pool change</span>
+              </div>
+              <div>
+                <strong>56.6 C to 40.4 C</strong>
+                <span>Junction peak temperature</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="case-section shell">
+        <div class="case-grid">
+          <div class="section-kicker">// AI-RAN</div>
+          <div class="case-copy">
+            <h2>AI-RAN on the same runtime.</h2>
+            <p>The AI-RAN repo is sample-data validation of the pipeline, not a forecast accuracy claim on public telecom data. On the 48-row synthetic sample, `reports/model_comparison/comparison_metrics.csv` records RMSE 0.84 for Ridge, 2.88 for GBR, and 22.6 for MLP.</p>
+            <p>`models/exports/manifest.json` records ONNX exports for Ridge, GBR, and MLP with parity within 2e-5 on the sample rows. The Telecom Italia MI loader is coded and tested, but that dataset has not been run. The Thor run for these AI-RAN models is pending.</p>
+            <div class="metric-band" aria-label="AI-RAN sample validation highlights">
+              <div>
+                <strong>48 rows</strong>
+                <span>Synthetic sample-data validation set</span>
+              </div>
+              <div>
+                <strong>0.84 RMSE</strong>
+                <span>Ridge on sample data</span>
+              </div>
+              <div>
+                <strong>2.88 RMSE</strong>
+                <span>GBR on sample data</span>
+              </div>
+              <div>
+                <strong>22.6 RMSE</strong>
+                <span>MLP on sample data</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="case-section shell">
+        <div class="case-grid">
+          <div class="section-kicker">// CORRECTIONS</div>
+          <div class="case-copy">
+            <h2>What went wrong and what was corrected.</h2>
+            <p>The Thor benchmark template originally carried Orin hardware fields: tegra-234, 64 GB, and JetPack 6. The harness also did not emit the gate block that the dashboard read, so a measured run would have rendered as not measured. Both were fixed before the first measured run.</p>
+            <p>The GPU provider failure is recorded rather than hidden. The artifact keeps the failed CUDA provider attempt, the cudaErrorNoKernelImageForDevice message, and the CPUExecutionProvider fallback.</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="case-section shell">
+        <div class="case-grid">
+          <div class="section-kicker">// LIMITS AND NEXT</div>
+          <div class="case-copy">
+            <h2>What is not established.</h2>
+            <ul>
+              <li>No detection-quality claim. All model metrics are on a synthetic fixture.</li>
+              <li>No capture, flow-extraction, or packet-to-alert latency measurement.</li>
+              <li>No sustained run beyond 300 s per tier.</li>
+              <li>No GPU execution on this device.</li>
+              <li>No forecast accuracy on public telecom data.</li>
+              <li>No deployed rApp or live RIC.</li>
+            </ul>
+            <p>Next work is WUSTL-IIoT-2021 evaluation with a non-random split, end-to-end latency on Thor, a 60-minute soak, the Telecom Italia MI run, and the AI-RAN Thor run.</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="case-section shell">
+        <div class="case-grid">
+          <div class="section-kicker">// SOURCES</div>
+          <div class="case-copy">
+            <h2>Sources and links.</h2>
+            <div class="source-list case-copy">
+              <p>Security sources: <a href="https://github.com/obiedeh/jetson-edge-ai-security/blob/main/reports/thor_benchmark.json">reports/thor_benchmark.json</a>, <a href="https://github.com/obiedeh/jetson-edge-ai-security/blob/main/reports/thor_benchmark_tegrastats.jsonl">reports/thor_benchmark_tegrastats.jsonl</a>, <a href="https://github.com/obiedeh/jetson-edge-ai-security/blob/main/reports/thor_benchmark_threads.json">reports/thor_benchmark_threads.json</a>, <a href="https://github.com/obiedeh/jetson-edge-ai-security/tree/main/reports/thor_threads">reports/thor_threads/</a>, <a href="https://github.com/obiedeh/jetson-edge-ai-security/blob/main/reports/training_run.json">reports/training_run.json</a>, <a href="https://github.com/obiedeh/jetson-edge-ai-security/blob/main/docs/publication-plan.md">docs/publication-plan.md</a>, and <a href="https://github.com/obiedeh/jetson-edge-ai-security/blob/main/docs/codex-task-site-page-2026-09-08.md">docs/codex-task-site-page-2026-09-08.md</a>.</p>
+              <p>AI-RAN sources: <a href="https://github.com/obiedeh/ai-ran-kpi-forecasting/blob/main/reports/model_comparison/comparison_metrics.csv">reports/model_comparison/comparison_metrics.csv</a>, <a href="https://github.com/obiedeh/ai-ran-kpi-forecasting/blob/main/models/exports/manifest.json">models/exports/manifest.json</a>, and <a href="https://github.com/obiedeh/ai-ran-kpi-forecasting/blob/main/docs/handoff-2026-09-08.md">docs/handoff-2026-09-08.md</a>.</p>
+            </div>
+            <div class="evidence-links">
+              <a href="https://github.com/obiedeh/jetson-edge-ai-security">Security repository ↗</a>
+              <a href="https://github.com/obiedeh/ai-ran-kpi-forecasting">AI-RAN repository ↗</a>
+              <a href="https://obiedeh.github.io/jetson-edge-ai-security/reports/index.html">Security evidence portal ↗</a>
+              <a href="https://obiedeh.github.io/ai-ran-kpi-forecasting/reports/index.html">AI-RAN evidence portal ↗</a>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <footer id="contact">
+        <div class="shell footer-grid">
+          <div>
+            <div class="section-kicker">// CONTACT</div>
+            <h2>Let’s build something that can leave the lab.</h2>
+            <p class="contact-intent">Open to leading AI systems work where teams need measurable edge, robotics, and operational evidence.</p>
+          </div>
+          <div class="contact-links">
+            <a href="mailto:obiedeh@gmail.com">obiedeh@gmail.com <span>↗</span></a>
+            <a href="https://www.linkedin.com/in/obinna-edeh-206306137/">linkedin.com/in/obinna-edeh <span>↗</span></a>
+            <a href="https://github.com/obiedeh">github.com/obiedeh <span>↗</span></a>
+          </div>
+        </div>
+        <div class="shell footer-bottom">
+          <span>© 2026 Obinna Edeh</span>
+          <a href="#top">Back to top ↑</a>
+        </div>
+      </footer>
+    </main>
+  </body>
+</html>
