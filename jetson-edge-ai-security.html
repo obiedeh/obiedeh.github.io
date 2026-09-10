@@ -435,32 +435,32 @@
             <h2>AI-RAN on the same runtime.</h2>
             <p>The AI-RAN repo is sample-data validation of the pipeline, not a forecast accuracy claim on public telecom data. On the 48-row synthetic sample, `reports/model_comparison/comparison_metrics.csv` records RMSE 0.84 for Ridge, 2.88 for GBR, and 22.6 for MLP.</p>
             <p>`models/exports/manifest.json` records ONNX exports for Ridge, GBR, and MLP with parity within 2e-5 on the sample rows. On the public Telecom Italia Milan grid (doi:10.7910/DVN/EGZHFV, 62 days, three squares by activity level, time-ordered split, 2026-09-09) the result depends on the hold-out window: in ordinary December weeks all three models beat a naive last-value baseline on every square, gradient boosting by the widest margin, while over the Christmas and New Year window the naive baseline beats them on two of three (`reports/forecast_examples/telecom_italia_mi/summary.json` and `telecom_italia_mi_preholiday/summary.json`). On Jetson AGX Thor, CPU provider, 2026-09-09, the three models ran at 1000 events/s with p95 0.0115 ms (Ridge), 0.0153 ms (GBR) and 0.0206 ms (MLP), zero to two deadline misses, one thread with spinning disabled; the default thread pool cost GBR about 30 W of board power and 18,342 misses (`reports/thor_benchmark/thread_comparison.json`). Inference cost only, not forecast accuracy.</p>
-            <div class="metric-band" aria-label="AI-RAN sample validation highlights">
+            <div class="metric-band" aria-label="AI-RAN measured highlights">
               <div>
-                <strong>48 rows</strong>
-                <span>Synthetic sample-data validation set</span>
+                <strong>0.0153 ms</strong>
+                <span>Gradient boosting p95 on Thor at 1000 events/s, CPU, one thread, 2026-09-09</span>
               </div>
               <div>
-                <strong>0.84 RMSE</strong>
-                <span>Ridge on sample data</span>
+                <strong>54.1 W to 24.1 W</strong>
+                <span>Board power for the same model, default thread pool versus one thread; 18,342 pacing misses to 0</span>
               </div>
               <div>
-                <strong>2.88 RMSE</strong>
-                <span>GBR on sample data</span>
+                <strong>5.8 to 9.6% MAPE</strong>
+                <span>Gradient boosting on three Milan squares, ordinary-weeks hold-out; naive baseline 10.8 to 25.4%</span>
               </div>
               <div>
-                <strong>22.6 RMSE</strong>
-                <span>MLP on sample data</span>
+                <strong>2 of 3 squares</strong>
+                <span>Where the naive baseline beats every model over the Christmas and New Year hold-out</span>
               </div>
             </div>
             <div class="chart-grid">
               <figure class="chart-panel">
-                <img src="https://obiedeh.github.io/ai-ran-kpi-forecasting/reports/model_comparison/comparison_overlay.svg" alt="Overlay of Ridge, gradient boosting and MLP forecasts against the hold-out on the synthetic sample" loading="lazy">
-                <figcaption>Three-model overlay on the synthetic sample, served from the AI-RAN evidence portal: `reports/model_comparison/comparison_overlay.svg`. Sample-data validation, not accuracy on public telecom data.</figcaption>
+                <img src="https://obiedeh.github.io/ai-ran-kpi-forecasting/reports/forecast_examples/telecom_italia_mi/rmse_two_windows.svg" alt="Hold-out RMSE per Milan square for Ridge, gradient boosting, MLP and the naive baseline, holiday window beside ordinary weeks" loading="lazy">
+                <figcaption>Telecom Italia MI, three squares, two hold-out windows, from `reports/forecast_examples/telecom_italia_mi/summary.json` and `telecom_italia_mi_preholiday/summary.json` on the AI-RAN evidence portal.</figcaption>
               </figure>
               <figure class="chart-panel">
-                <img src="https://obiedeh.github.io/ai-ran-kpi-forecasting/reports/forecast_examples/latest/prb_dl_util_forecast.svg" alt="Ridge forecast of PRB downlink utilisation for CELL_001 with a 24-step horizon on the synthetic sample" loading="lazy">
-                <figcaption>Ridge forecast of `prb_dl_util` for CELL_001, horizon 24, from `reports/forecast_examples/latest/prb_dl_util_forecast.svg` on the same portal.</figcaption>
+                <img src="https://obiedeh.github.io/ai-ran-kpi-forecasting/reports/thor_benchmark/latency_power.svg" alt="Thor p95 latency and board power for the three ONNX forecasters, default thread pool against one thread" loading="lazy">
+                <figcaption>Jetson AGX Thor, CPU provider, 1000 events/s, from `reports/thor_benchmark/thread_comparison.json`. Inference cost only.</figcaption>
               </figure>
             </div>
           </div>
