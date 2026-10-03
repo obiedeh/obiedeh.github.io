@@ -1,0 +1,580 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Bench2Field - Obinna Edeh</title>
+<meta name="description" content="Bench2Field measures how much of a model's benchmark performance survives on the robot.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..125,400..800&family=IBM+Plex+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<link rel="icon" href="/favicon.svg">
+<style>
+/* Layout: an instrument report. Decision band on top, then evidence in reading order, provenance last. One column of panels on a tinted ground, charts on raised plates. */
+:root{
+  --bg:#f3f4f2; --plate:#fcfcfb; --ink:#141614; --ink-2:#4d524d; --ink-3:#7c817b;
+  --rule:#dcdfda; --grid:#e8eae6; --accent:#0f6e5a;
+  --s1:#2a78d6; --s2:#eb6834; --s3:#1baf7a; --s4:#eda100; --s5:#e87ba4; --s6:#4a3aa7;
+  --warn:#9a5b00; --warn-bg:#fbefd6; --bad:#b4232c; --bad-bg:#fbe3e3; --good:#13663a; --good-bg:#dff1e5;
+  --f-display:"Archivo",system-ui,sans-serif; --f-body:"IBM Plex Sans",system-ui,sans-serif; --f-data:"JetBrains Mono",ui-monospace,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#121412; --plate:#1a1c1a; --ink:#f2f3f0; --ink-2:#c1c5bd; --ink-3:#8d928a;
+  --rule:#2e322e; --grid:#262926; --accent:#4fc4a6;
+  --s1:#3987e5; --s2:#d95926; --s3:#199e70; --s4:#c98500; --s5:#d55181; --s6:#9085e9;
+  --warn:#f0b75a; --warn-bg:#3a2a0e; --bad:#ff8a85; --bad-bg:#3d1a1a; --good:#7ed6a0; --good-bg:#16301f; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#121412; --plate:#1a1c1a; --ink:#f2f3f0; --ink-2:#c1c5bd; --ink-3:#8d928a;
+  --rule:#2e322e; --grid:#262926; --accent:#4fc4a6;
+  --s1:#3987e5; --s2:#d95926; --s3:#199e70; --s4:#c98500; --s5:#d55181; --s6:#9085e9;
+  --warn:#f0b75a; --warn-bg:#3a2a0e; --bad:#ff8a85; --bad-bg:#3d1a1a; --good:#7ed6a0; --good-bg:#16301f; color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.55}
+.wrap{max-width:1080px;margin:0 auto;padding-inline:20px;padding-block:28px 64px;display:flex;flex-direction:column;gap:28px}
+h1,h2,h3{font-family:var(--f-display);margin:0;text-wrap:balance;letter-spacing:-.01em}
+h1{font-size:clamp(28px,4.6vw,44px);font-weight:760;font-stretch:88%;line-height:1.05}
+h2{font-size:22px;font-weight:700;font-stretch:92%}
+h3{font-size:15px;font-weight:650}
+p{margin:0;max-width:66ch;color:var(--ink-2)}
+.eyebrow{font-family:var(--f-data);font-size:11.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3)}
+.num{font-family:var(--f-data);font-variant-numeric:tabular-nums}
+header{display:flex;flex-direction:column;gap:12px;border-bottom:1px solid var(--rule);padding-bottom:22px}
+.toprow{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between}
+.pill{display:inline-flex;align-items:center;gap:6px;font-family:var(--f-data);font-size:11.5px;padding:3px 9px;border-radius:999px;letter-spacing:.03em}
+.pill.warn{background:var(--warn-bg);color:var(--warn)}
+.pill.good{background:var(--good-bg);color:var(--good)}
+.pill svg{width:12px;height:12px}
+.meta{display:flex;flex-wrap:wrap;gap:6px 18px;font-size:13px;color:var(--ink-3)}
+.meta b{color:var(--ink-2);font-weight:500}
+
+/* decision band */
+.decision{display:grid;grid-template-columns:1.25fr 1fr;gap:18px}
+@media (max-width:820px){.decision{grid-template-columns:1fr}}
+.verdict{background:var(--plate);border:1px solid var(--rule);border-radius:10px;padding:22px;display:flex;flex-direction:column;gap:14px;min-width:0}
+.verdict .big{font-family:var(--f-display);font-size:clamp(22px,3vw,30px);font-weight:700;font-stretch:90%;line-height:1.15}
+.verdict .big em{font-style:normal;color:var(--accent)}
+.tiles{display:grid;align-self:start;grid-template-columns:1fr 1fr;gap:1px;background:var(--rule);border:1px solid var(--rule);border-radius:10px;overflow:hidden}
+.tile{background:var(--plate);padding:16px 18px;display:flex;flex-direction:column;gap:4px;min-width:0}
+.tile .v{font-family:var(--f-data);font-size:26px;font-weight:500;font-variant-numeric:tabular-nums;line-height:1.1}
+.tile .v small{font-size:13px;color:var(--ink-3);margin-left:3px}
+.tile .l{font-size:12.5px;color:var(--ink-2)}
+.tile .n{font-size:11.5px;color:var(--ink-3)}
+
+/* field gap */
+.field{display:grid;grid-template-columns:auto 1fr;gap:18px;align-items:center;background:var(--warn-bg);border:1px solid var(--warn);border-radius:10px;padding:18px 22px}
+@media (max-width:640px){.field{grid-template-columns:1fr}}
+.field-k{display:flex;flex-direction:column;gap:6px;align-items:flex-start;min-width:150px}
+.field .fv{font-family:var(--f-display);font-size:26px;font-weight:700;font-stretch:90%}
+.field p{color:var(--ink)}
+/* camera strip */
+.camera{display:grid;grid-template-columns:auto 1fr;gap:18px;align-items:center;background:var(--plate);border:1px solid var(--rule);border-radius:10px;padding:18px 22px}
+@media (max-width:640px){.camera{grid-template-columns:1fr}}
+.gauge{display:flex;flex-direction:column;gap:6px;min-width:240px}
+.gauge .bar{position:relative;height:10px;background:var(--grid);border-radius:5px}
+.gauge .fill{position:absolute;left:0;top:0;bottom:0;background:var(--accent);border-radius:5px}
+.gauge .tick{position:absolute;top:-4px;bottom:-4px;width:2px;background:var(--ink)}
+.gauge .lbls{display:flex;justify-content:space-between;font-family:var(--f-data);font-size:11.5px;color:var(--ink-3)}
+
+/* panels */
+section.panel{background:var(--plate);border:1px solid var(--rule);border-radius:10px;padding:22px;display:flex;flex-direction:column;gap:14px;min-width:0}
+.panel-head{display:flex;flex-wrap:wrap;justify-content:space-between;gap:12px;align-items:flex-end}
+.panel-head > div:first-child{display:flex;flex-direction:column;gap:6px;min-width:0}
+.seg{display:inline-flex;border:1px solid var(--rule);border-radius:7px;overflow:hidden}
+.seg button{font:500 12.5px var(--f-data);background:transparent;color:var(--ink-2);border:0;padding:6px 11px;cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--plate)}
+.seg button:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+.legend{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:12.5px;color:var(--ink-2)}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.chart{width:100%;overflow-x:auto}
+.chart svg{display:block;width:100%;height:auto;min-width:520px}
+.chart svg text{font-family:var(--f-data);font-size:11px;fill:var(--ink-3)}
+.chart svg .lab{fill:var(--ink-2);font-size:11.5px}
+.chart svg .strong{fill:var(--ink);font-weight:500}
+.duo{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+@media (max-width:760px){.duo{grid-template-columns:1fr}}
+.duo > div{display:flex;flex-direction:column;gap:8px;min-width:0}
+.duo .chart svg{min-width:300px}
+.takeaways{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+@media (max-width:760px){.takeaways{grid-template-columns:1fr}}
+.takeaways div{border-top:2px solid var(--ink);padding-top:10px;display:flex;flex-direction:column;gap:4px}
+.takeaways .k{font-family:var(--f-data);font-size:20px;font-variant-numeric:tabular-nums}
+.takeaways p{font-size:13.5px}
+.spin{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+@media (max-width:640px){.spin{grid-template-columns:1fr}}
+.spin-row{display:flex;flex-direction:column;gap:6px}
+.hbar{height:16px;border-radius:0 4px 4px 0;background:var(--s2)}
+.hbar.off{background:var(--s1)}
+.hrow{display:grid;grid-template-columns:88px 1fr 70px;gap:10px;align-items:center;font-size:12.5px}
+.hrow .num{text-align:right}
+
+/* provenance */
+.tablewrap{overflow-x:auto;border:1px solid var(--rule);border-radius:8px}
+table{border-collapse:collapse;width:100%;font-size:12.5px;min-width:820px}
+th,td{padding:7px 10px;text-align:left;border-bottom:1px solid var(--grid);white-space:nowrap}
+th{font-family:var(--f-data);font-weight:500;font-size:11px;letter-spacing:.05em;text-transform:uppercase;color:var(--ink-3);background:var(--bg)}
+td.num{text-align:right}
+tr.flag td{color:var(--warn)}
+.note{font-size:12.5px;color:var(--ink-3);max-width:80ch}
+.proto{border:1px dashed var(--rule);border-radius:10px;padding:16px 20px;display:flex;flex-direction:column;gap:8px}
+.proto ul{margin:0;padding-left:18px;color:var(--ink-2);font-size:13.5px;display:flex;flex-direction:column;gap:4px}
+
+#tip{position:fixed;pointer-events:none;background:var(--ink);color:var(--plate);font:12px/1.45 var(--f-data);padding:8px 10px;border-radius:6px;max-width:280px;z-index:10;box-shadow:0 4px 18px rgba(0,0,0,.18)}
+@media (prefers-reduced-motion:no-preference){.chart path.line{transition:d .25s}}
+
+.pills{display:flex;flex-wrap:wrap;gap:8px}
+.pill.bad{background:var(--bad-bg);color:var(--bad)}
+.ladder{display:flex;flex-direction:column;gap:8px;padding-block:4px}
+.lrow{display:grid;grid-template-columns:96px 1fr 64px;gap:10px;align-items:center;font-size:12.5px}
+.lrow .num{text-align:right}
+.ltrack{position:relative;height:14px;background:var(--grid);border-radius:0 4px 4px 0}
+.ltrack.bare{background:transparent;height:14px}
+.ltrack.bare span{position:absolute;transform:translateX(-50%);white-space:nowrap;font-family:var(--f-data);font-size:11px;color:var(--warn)}
+.lbar{position:absolute;left:0;top:0;bottom:0;border-radius:0 4px 4px 0}
+.ldl{position:absolute;top:-4px;bottom:-4px;width:2px;background:var(--warn)}
+.trio{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+@media (max-width:860px){.trio{grid-template-columns:1fr}}
+.trio > div{display:flex;flex-direction:column;gap:8px;min-width:0}
+.trio .chart svg{min-width:260px}
+.thermal{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:22px;align-items:center}
+@media (max-width:760px){.thermal{grid-template-columns:1fr}}
+.thermal .chart svg{min-width:320px}
+.corr{display:flex;flex-direction:column;gap:10px;align-items:flex-start}
+.wrapseg{flex-wrap:wrap}
+h1.brand{font-size:clamp(44px,8vw,84px);font-stretch:85%;font-weight:800;letter-spacing:-.02em}
+.lede{font-size:18px;max-width:64ch}
+.lede b{color:var(--ink);font-weight:600}
+.spec{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));border-top:2px solid var(--ink);border-bottom:1px solid var(--rule)}
+.spec div{padding:12px 14px 12px 0;display:flex;flex-direction:column;gap:2px;min-width:0}
+.spec div+div{padding-left:14px;border-left:1px solid var(--rule)}
+.spec b{font-weight:600;font-size:14.5px}
+.spec span:last-child{font-size:13px;color:var(--ink-3)}
+@media (max-width:820px){.spec{grid-template-columns:1fr 1fr}.spec div:nth-child(3){padding-left:0;border-left:0}.spec div:nth-child(n+3){border-top:1px solid var(--rule)}}
+@media (max-width:440px){.spec{grid-template-columns:1fr}.spec div{padding-left:0!important;border-left:0!important}.spec div+div{border-top:1px solid var(--rule)}}
+.flow{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));border:1px solid var(--rule);border-radius:8px;overflow:hidden}
+.flow div{padding:14px 16px;display:flex;flex-direction:column;gap:6px;min-width:0}
+.flow div+div{border-left:1px dashed var(--rule)}
+.flow .n{font-family:var(--f-data);font-size:11px;color:var(--ink-3)}
+.flow b{font-family:var(--f-display);font-size:16px;font-weight:650;line-height:1.2}
+.flow p{font-size:13.5px}
+@media (max-width:900px){.flow{grid-template-columns:1fr}.flow div+div{border-left:0;border-top:1px dashed var(--rule)}}
+.callout{display:grid;grid-template-columns:auto 1fr;gap:18px;align-items:center;background:var(--good-bg);border-radius:8px;padding:16px 20px}
+.callout strong{font-family:var(--f-display);font-size:20px;font-weight:700;color:var(--good);line-height:1.1;max-width:16ch}
+.callout p{color:var(--ink)}
+@media (max-width:640px){.callout{grid-template-columns:1fr}}
+.cmds{border:1px solid var(--rule);border-radius:8px;overflow:hidden}
+.cmd{display:grid;grid-template-columns:170px 1fr;gap:16px;padding:11px 16px;align-items:baseline}
+.cmd+.cmd{border-top:1px solid var(--grid)}
+.cmd code{font-family:var(--f-data);font-size:13px;color:var(--accent);font-weight:500}
+.cmd p{font-size:14px;max-width:none}
+@media (max-width:600px){.cmd{grid-template-columns:1fr;gap:2px}}
+.trust{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px 26px}
+@media (max-width:860px){.trust{grid-template-columns:1fr 1fr}}
+@media (max-width:540px){.trust{grid-template-columns:1fr}}
+.trust div{border-top:2px solid var(--ink);padding-top:10px;display:flex;flex-direction:column;gap:4px;min-width:0}
+.trust b{font-family:var(--f-display);font-size:16px;font-weight:650}
+.trust p{font-size:13.5px}
+.ledger{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}
+@media (max-width:760px){.ledger{grid-template-columns:1fr}}
+.col{border:1px solid var(--rule);border-radius:8px;padding:16px 18px;display:flex;flex-direction:column;gap:12px;min-width:0}
+.col ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:10px}
+.col li{display:grid;grid-template-columns:18px 1fr;gap:10px;font-size:14px;color:var(--ink-2)}
+.col li b{color:var(--ink);font-weight:600}
+.mk{width:12px;height:12px;margin-top:6px;border-radius:2px}
+.mk.ok{background:var(--good)}
+.mk.open{border:2px solid var(--accent)}
+.roadmap{display:flex;flex-wrap:wrap;gap:8px}
+.roadmap span{font-size:13px;border:1px solid var(--rule);border-radius:999px;padding:5px 12px;color:var(--ink-2)}
+.roadmap span.first{border-color:var(--accent);color:var(--accent)}
+footer{border-top:1px solid var(--rule);padding-top:18px;display:flex;flex-wrap:wrap;gap:8px 24px;justify-content:space-between;font-size:13px;color:var(--ink-3)}
+footer a{color:var(--accent)}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+<header>
+  <div class="toprow">
+    <span class="eyebrow">Model benchmarking · measured on the robot</span>
+    <span class="pill good"><svg viewBox="0 0 12 12" aria-hidden="true"><path d="M2 6.5 5 9l5-6" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>v1.0.1 released · phase 2 under way</span>
+  </div>
+  <h1 class="brand">Bench2Field</h1>
+  <p class="lede">A benchmark tells you how fast a model runs on a bench. Bench2Field measures how much of that survives on the robot, and where the rest goes. It runs the model at the rate the robot's camera really delivers, times <b>the whole frame</b> and not just the model, and refuses any number that doesn't trace to a committed run.</p>
+  <div class="spec">
+    <div><span class="eyebrow">Field board</span><b>Jetson Orin NX</b><span>inside a ROSMASTER M3 Pro rover</span></div>
+    <div><span class="eyebrow">Bench boards</span><b>Jetson AGX Thor, RTX 5090</b><span>one report schema across all three</span></div>
+    <div><span class="eyebrow">Case study 01</span><b>YOLOX-s detector</b><span>FP32 ONNX through TensorRT</span></div>
+    <div><span class="eyebrow">Tool</span><b>b2f command line</b><span>Python, 145 tests, Apache 2.0</span></div>
+  </div>
+</header>
+<div class="decision">
+  <div class="verdict">
+    <span class="eyebrow">Phase 1 result · field board, Orin NX · 26 Hz camera</span>
+    <div class="big" id="headline"></div>
+    <p id="headline-sub"></p>
+    <div class="ladder" id="ladder"></div>
+    <div class="pills"><span class="pill good"><svg viewBox="0 0 12 12" aria-hidden="true"><path d="M2 6.5 5 9l5-6" fill="none" stroke="currentColor" stroke-width="1.6"/></svg><span id="miss-pill"></span></span>
+    <span class="pill bad"><svg viewBox="0 0 12 12" aria-hidden="true"><path d="M3 3l6 6M9 3 3 9" stroke="currentColor" stroke-width="1.6"/></svg>Full frame misses the 33.3 ms deadline</span></div>
+  </div>
+  <div class="tiles" id="tiles"></div>
+</div>
+
+<div class="camera">
+  <div class="gauge">
+    <span class="eyebrow">Rover camera, Orbbec DaBai DCW2</span>
+    <div class="bar"><div class="fill" style="width:86.3%"></div><div class="tick" style="left:calc(100% - 2px)"></div></div>
+    <div class="lbls"><span>0 Hz</span><span>25.9 delivered</span><span>30 configured</span></div>
+  </div>
+  <p>The launch file asks for 640×480 at 30 fps. With the rover's stack running, the colour topic arrived at a mean of <b class="num">25.9 Hz</b> over 60 s (windows 23.7 to 27.0), because the driver decodes MJPEG on the CPU. The benchmark follows the robot, so 26 Hz is the headline tier.</p>
+</div>
+
+
+<section class="panel">
+  <div class="panel-head"><div><span class="eyebrow">Bench vs field, whole frame</span><h2>Same frames, three boards: only the rover misses</h2>
+  <p>Median time per stage, 300 frames from the rover's camera at 640×480, one frame at a time, TensorRT FP32, threads not spinning. Same frames and code on every board, drawn to one scale. The black figure at the end of each bar is the frame's p95.</p></div></div>
+  <div class="legend" id="stage-legend2"></div>
+  <div class="chart" id="cmp-chart"></div>
+  <div class="takeaways" id="cmp-take"></div>
+</section>
+<section class="panel" id="rate">
+  <div class="panel-head">
+    <div><span class="eyebrow">Bench vs field</span><h2>Latency depends on how often frames arrive</h2>
+    <p>Response time from frame arrival to result, median of three repeats; whiskers show the range across repeats. Log scale, because the boards differ by more than ten times. Sparse frames let the GPU drop into a lower power state, and each frame pays to wake it.</p></div>
+    <div class="seg" role="group" aria-label="Percentile" id="pct">
+      <button aria-pressed="false" data-p="p50">p50</button><button aria-pressed="true" data-p="p95">p95</button><button aria-pressed="false" data-p="p99">p99</button>
+    </div>
+  </div>
+  <div class="legend" id="rate-legend"></div>
+  <div class="chart" id="rate-chart"></div>
+  <div class="takeaways" id="rate-take"></div>
+</section>
+<section class="panel">
+  <div class="panel-head"><div><span class="eyebrow">Why</span><h2>The power state follows the frame rate</h2>
+  <p>Each board's own telemetry, TensorRT FP32, median across repeats. The measures differ by board, so each gets its own axis.</p></div></div>
+  <div class="trio">
+    <div><h3>RTX 5090 · SM clock (MHz)</h3><div class="chart" id="m1"></div></div>
+    <div><h3>Thor · GPU rail (W)</h3><div class="chart" id="m2"></div></div>
+    <div><h3>Orin NX · CPU+GPU rail (W)</h3><div class="chart" id="m3"></div></div>
+  </div>
+  <p class="note">The Jetsons report no GPU clock through tegrastats, so their power-state explanation is inferred from the rails rather than measured directly. At 100 Hz the Orin is saturated, so its rail shows full load.</p>
+</section>
+<section class="panel">
+  <div class="panel-head"><div><span class="eyebrow">End-to-end profile, RTX 5090</span><h2>Inference is the smallest part of the frame</h2>
+  <p>Median time per stage over 300 frames, one frame at a time, TensorRT FP32. Rover frames come from the DaBai camera; the busy scene comes from recorded video.</p></div></div>
+  <div class="legend" id="stage-legend"></div>
+  <div class="chart" id="stage-chart"></div>
+  <div class="spin">
+    <div class="spin-row"><h3>ONNX Runtime thread spinning, rover 720p</h3>
+      <p>Spin-waiting threads steal CPU from the host stages. Turning spinning off leaves inference unchanged and collapses the tail, which is why every baseline above runs with it off.</p></div>
+    <div class="spin-row" id="spin-bars"></div>
+  </div>
+</section>
+<section class="panel">
+  <div class="panel-head"><div><span class="eyebrow">Repeats, Orin NX</span><h2>Why every number is a median of alternated repeats</h2>
+  <p>TensorRT FP32 at 26 Hz, the three phase 1 repeats in the order they ran. The first came in 3.8 ms faster than the other two.</p></div></div>
+  <div class="thermal">
+    <div class="chart" id="therm"></div>
+    <div class="corr"><span class="pill warn">Corrected in v1.0.1</span><p>v1.0 put the fast repeat down to the board being cooler. A later sweep on the same board measured 26.84 to 26.90 ms in all three repeats at similar temperatures, so heat doesn't explain it and the claim was withdrawn. The cause isn't established. The median, 26.9 ms, is the board's figure, and the repeats are what exposed the outlier.</p></div>
+  </div>
+</section>
+<section class="panel">
+  <div class="panel-head"><div><span class="eyebrow">Method</span><h2>Timed the way the robot sees it</h2></div></div>
+  <div class="flow">
+    <div><span class="n">01 · arrive</span><b>Frames at the camera's rate</b><p>Requests come at a fixed rate whether or not the last frame is done, like a camera.</p></div>
+    <div><span class="n">02 · time</span><b>From arrival, not from start</b><p>A frame is late relative to when it arrived, so queueing shows up in the percentiles.</p></div>
+    <div><span class="n">03 · profile</span><b>Every stage of the frame</b><p>Decode, preprocess, copies, inference and NMS, per stage, on the same frames on every board.</p></div>
+    <div><span class="n">04 · repeat</span><b>Alternated repeats</b><p>Variants run A, B, A, B in separate processes, so board state can't favour one of them.</p></div>
+    <div><span class="n">05 · decide</span><b>Verdict and report</b><p>GO or NO-GO against a budget written before testing, and this page built from the runs.</p></div>
+  </div>
+  <div class="callout"><strong>Every number traces to a committed run</strong><p>Each run file records the code commit, library versions, power mode, thread settings and everything else running on the board. The report is built from those files and nothing else, so it can't drift from the data.</p></div>
+</section>
+<section class="panel">
+  <div class="panel-head"><div><span class="eyebrow">The tool</span><h2>What b2f does</h2>
+  <p>One schema for every run, so a workstation GPU and two Jetsons compare directly. Telemetry comes from NVML on discrete GPUs and tegrastats on Jetson; a rocm-smi reader for AMD is written but not yet run on AMD hardware.</p></div></div>
+  <div class="cmds">
+    <div class="cmd"><code>b2f run</code><p>Benchmark an ONNX model at fixed request rates through ONNX Runtime on CPU, CUDA or TensorRT, with MIGraphX and ROCm wired in for the AMD phase. Records latency from arrival, deadline misses, power, clocks and temperature.</p></div>
+    <div class="cmd"><code>b2f sweep</code><p>Repeats of several variants, alternated, one process per run, with a manifest of the order. Refuses a checkout that doesn't match the expected commit.</p></div>
+    <div class="cmd"><code>b2f record-load</code><p>Record the robot's own background load so it can be replayed on the bench as CPU, memory-bandwidth and GPU stressors.</p></div>
+    <div class="cmd"><code>b2f retention</code><p>Of the speedup an optimization shows on the bench, how much is left on the robot. Warns when power modes or library versions differ between the two sides.</p></div>
+    <div class="cmd"><code>b2f attribute</code><p>Split the bench-to-field loss into causes, one stressor at a time, with the unexplained remainder reported rather than hidden.</p></div>
+    <div class="cmd"><code>b2f verdict</code><p>GO, NO-GO or INCOMPLETE against a deployment budget: deadline, miss rate, power, temperature, accuracy.</p></div>
+    <div class="cmd"><code>b2f report</code><p>One self-contained HTML page from a case study's committed runs. Works offline, light and dark.</p></div>
+  </div>
+</section>
+<section class="panel">
+  <div class="panel-head"><div><span class="eyebrow">Controls</span><h2>Built so the numbers hold up</h2></div></div>
+  <div class="trust">
+    <div><b>Provenance on every run</b><p>Commit and dirty flag, ONNX Runtime, TensorRT, cuDNN and CUDA versions as loaded, power mode, thread settings and TensorRT build options.</p></div>
+    <div><b>What else was running</b><p>Each report snapshots containers, the busiest processes and load average, so a quiet bench has to prove it was quiet.</p></div>
+    <div><b>Nothing changed silently</b><p>Power modes, fans and governors are recorded, never changed during a run. Any board change is the owner's decision.</p></div>
+    <div><b>Reproduced from a clean clone</b><p>A fresh clone following only the README reproduced a baseline and the report. The first pass found two install gaps, and the README was fixed.</p></div>
+    <div><b>Model provenance</b><p>The exported model's hash, export options and a check against the original framework's output are committed.</p></div>
+    <div><b>Speed is not accuracy</b><p>No optimized variant is claimed until its accuracy is measured. Phase 2 speed results stay labelled until then.</p></div>
+  </div>
+</section>
+<section class="panel">
+  <div class="panel-head"><div><span class="eyebrow">Status, October 2026</span><h2>Measured, and still to measure</h2></div></div>
+  <div class="ledger">
+    <div class="col"><span class="eyebrow">v1: measure and diagnose</span><ul>
+      <li><span class="mk ok"></span><span><b>Bring-up on three boards</b> with real-hardware fixtures for every telemetry parser.</span></li>
+      <li><span class="mk ok"></span><span><b>FP32 baselines</b> on all three boards at 10, 26, 30 and 100 Hz, three alternated repeats each.</span></li>
+      <li><span class="mk ok"></span><span><b>Full-frame profiles</b> on all three boards on the rover's own frames, plus an Nsight Systems capture on the 5090.</span></li>
+      <li><span class="mk ok"></span><span><b>145 tests</b> on Python 3.10 and 3.12, CI on every push, tagged releases with the report attached.</span></li></ul></div>
+    <div class="col"><span class="eyebrow">Not yet measured</span><ul>
+      <li><span class="mk open"></span><span><b>Accuracy</b> of any optimized variant. The harness comes first in the next phase.</span></li>
+      <li><span class="mk open"></span><span><b>The rover under load</b>: field runs with its SLAM stack up, load replay on the bench, and gap attribution.</span></li>
+      <li><span class="mk open"></span><span><b>Busy scenes.</b> The profiled frames show a plain wall, so decode and NMS were at their cheapest.</span></li>
+      <li><span class="mk open"></span><span><b>AMD hardware</b> for the ROCm port.</span></li></ul></div>
+  </div>
+  <span class="eyebrow">v2: optimize and close the gap</span>
+  <div class="roadmap"><span class="first">Accuracy harness</span><span class="first">FP16 and INT8 with calibration</span><span>2:4 structured sparsity</span><span>Distillation, YOLOX-l to YOLOX-s</span><span>Fused CUDA preprocessing kernel</span><span>Zero-copy on Jetson, pinned memory on the 5090</span><span>HIP port and MIGraphX on MI300X</span><span>Field load replay and attribution</span><span>Triton serving on the 5090</span></div>
+</section>
+<section class="panel">
+  <div class="panel-head"><div><span class="eyebrow">Provenance</span><h2>Every run behind this page</h2>
+  <p>Versions, power mode, thread spinning, code commit and what else was running, as recorded in each report.</p></div>
+  <div class="seg wrapseg" role="group" aria-label="Run set" id="setf"></div></div>
+  <div class="tablewrap"><table id="prov"></table></div>
+  <p class="note">Rows marked reference are kept as evidence: spin-on runs, the first Thor sweep with an idle vLLM container resident, and a stopped re-run. A dash in the commit column means the run predates the provenance guard. The Thor and Orin differ in TensorRT and cuDNN because they run JetPack 7 and 6.</p>
+</section>
+<footer><span>Bench2Field · An EmbodiedEdge Labs project · <a href="/">Obinna Edeh</a></span><span>v1.0.1 · Apache 2.0 · repository private during active development</span></footer>
+</div>
+<div id="tip" hidden></div>
+<script>
+const DATA = {"runs": [{"set": "bench_5090", "label": "cuda_fp32", "rep": 1, "order": 2, "id": "35daf8bbda5a", "at": "2026-10-03 00:40", "dev": "RTX 5090", "ort": "1.30.0", "trt": null, "cudnn": "9.19.0", "cuda": "13.0", "spin": true, "pm": "", "git": null, "bg": ["telecom-pg"], "tiers": [{"hz": 10.0, "ahz": 10.016171889906614, "p50": 3.047666745260358, "p95": 3.400257579050958, "p99": 3.6284938175231214, "sp95": 3.229612903669476, "miss": 0, "n": 600, "clk": 2475.0, "gpw": 71.697, "vgpu": null, "bw": null, "tj": 47.0, "gl": 3.0}, {"hz": 30.0, "ahz": 30.01529029968584, "p50": 2.9472133610397577, "p95": 3.251229040324688, "p99": 3.4975847182795405, "sp95": 3.0677069444209337, "miss": 0, "n": 1800, "clk": 2497.0, "gpw": 77.8945, "vgpu": null, "bw": null, "tj": 45.0, "gl": 7.0}, {"hz": 100.0, "ahz": 100.01230394185713, "p50": 2.7423384599387646, "p95": 3.0162051552906632, "p99": 3.6361609445884837, "sp95": 2.8304959880188107, "miss": 0, "n": 6000, "clk": 2572.0, "gpw": 103.0895, "vgpu": null, "bw": null, "tj": 45.0, "gl": 20.0}]}, {"set": "bench_5090", "label": "cuda_fp32", "rep": 2, "order": 4, "id": "5205bb21c93c", "at": "2026-10-03 00:47", "dev": "RTX 5090", "ort": "1.30.0", "trt": null, "cudnn": "9.19.0", "cuda": "13.0", "spin": true, "pm": "", "git": null, "bg": ["telecom-pg"], "tiers": [{"hz": 10.0, "ahz": 10.016177892871383, "p50": 3.008799161761999, "p95": 3.564901533536613, "p99": 4.34891879558563, "sp95": 3.3957326551899314, "miss": 0, "n": 600, "clk": 2460.0, "gpw": 68.6865, "vgpu": null, "bw": null, "tj": 42.0, "gl": 3.0}, {"hz": 30.0, "ahz": 30.015239499562437, "p50": 2.802889794111252, "p95": 3.0554415425285697, "p99": 3.292959788814187, "sp95": 2.8944060672074556, "miss": 0, "n": 1800, "clk": 2482.0, "gpw": 75.9295, "vgpu": null, "bw": null, "tj": 42.0, "gl": 6.0}, {"hz": 100.0, "ahz": 100.01224423252965, "p50": 2.7385493740439415, "p95": 2.8348751133307815, "p99": 2.8949706628918648, "sp95": 2.6456139516085386, "miss": 0, "n": 6000, "clk": 2572.0, "gpw": 101.63900000000001, "vgpu": null, "bw": null, "tj": 43.0, "gl": 19.0}]}, {"set": "bench_5090", "label": "cuda_fp32", "rep": 3, "order": 6, "id": "800dd015f2ad", "at": "2026-10-03 00:53", "dev": "RTX 5090", "ort": "1.30.0", "trt": null, "cudnn": "9.19.0", "cuda": "13.0", "spin": true, "pm": "", "git": null, "bg": ["telecom-pg"], "tiers": [{"hz": 10.0, "ahz": 10.016221265046768, "p50": 2.9149027541279793, "p95": 4.108952241949737, "p99": 4.4078219356015325, "sp95": 3.9365801261737943, "miss": 0, "n": 600, "clk": 2445.0, "gpw": 68.09450000000001, "vgpu": null, "bw": null, "tj": 41.0, "gl": 2.0}, {"hz": 30.0, "ahz": 30.015278850921906, "p50": 2.7622058987617493, "p95": 2.8809330193325877, "p99": 2.99344920553267, "sp95": 2.6944914599880576, "miss": 0, "n": 1800, "clk": 2475.0, "gpw": 75.055, "vgpu": null, "bw": null, "tj": 41.0, "gl": 6.0}, {"hz": 100.0, "ahz": 100.01207749843732, "p50": 2.7237676549702883, "p95": 2.867490635253489, "p99": 3.0883934395387778, "sp95": 2.6848834473639727, "miss": 0, "n": 6000, "clk": 2572.0, "gpw": 101.1525, "vgpu": null, "bw": null, "tj": 42.0, "gl": 19.0}]}, {"set": "bench_5090", "label": "trt_fp32", "rep": 1, "order": 1, "id": "e475460affbb", "at": "2026-10-03 00:37", "dev": "RTX 5090", "ort": "1.30.0", "trt": "10.16.1", "cudnn": "9.19.0", "cuda": "13.0", "spin": true, "pm": "", "git": null, "bg": ["telecom-pg"], "tiers": [{"hz": 10.0, "ahz": 10.016366637608089, "p50": 2.179324859753251, "p95": 2.5154733331874, "p99": 2.9546318901702753, "sp95": 2.251034090295433, "miss": 0, "n": 600, "clk": 2467.0, "gpw": 71.0775, "vgpu": null, "bw": null, "tj": 45.0, "gl": 3.0}, {"hz": 30.0, "ahz": 30.015751332132805, "p50": 2.004829002544284, "p95": 2.219457644969225, "p99": 2.2894266713410616, "sp95": 2.03491544816643, "miss": 0, "n": 1800, "clk": 2482.0, "gpw": 78.86, "vgpu": null, "bw": null, "tj": 47.0, "gl": 6.0}, {"hz": 100.0, "ahz": 100.01376842555955, "p50": 1.7539432737976313, "p95": 1.9531248603016138, "p99": 2.052644276991488, "sp95": 1.762156467884779, "miss": 0, "n": 6000, "clk": 2550.0, "gpw": 104.136, "vgpu": null, "bw": null, "tj": 50.0, "gl": 15.0}]}, {"set": "bench_5090", "label": "trt_fp32", "rep": 2, "order": 3, "id": "b5bfc5752baf", "at": "2026-10-03 00:43", "dev": "RTX 5090", "ort": "1.30.0", "trt": "10.16.1", "cudnn": "9.19.0", "cuda": "13.0", "spin": true, "pm": "", "git": null, "bg": ["telecom-pg"], "tiers": [{"hz": 10.0, "ahz": 10.01634850121589, "p50": 2.148284809663892, "p95": 2.4460651446133848, "p99": 2.7589540090411897, "sp95": 2.248401800170541, "miss": 0, "n": 600, "clk": 2452.0, "gpw": 69.4025, "vgpu": null, "bw": null, "tj": 43.0, "gl": 2.0}, {"hz": 30.0, "ahz": 30.01568908207115, "p50": 1.864409539848566, "p95": 2.0928619196638465, "p99": 2.2202742705121636, "sp95": 1.920099975541234, "miss": 0, "n": 1800, "clk": 2475.0, "gpw": 75.0615, "vgpu": null, "bw": null, "tj": 43.0, "gl": 5.0}, {"hz": 100.0, "ahz": 100.01373351775213, "p50": 1.7311330884695053, "p95": 1.8929241225123405, "p99": 2.0269284397363667, "sp95": 1.7109583364799619, "miss": 0, "n": 6000, "clk": 2535.0, "gpw": 98.1925, "vgpu": null, "bw": null, "tj": 43.0, "gl": 13.0}]}, {"set": "bench_5090", "label": "trt_fp32", "rep": 3, "order": 5, "id": "9ca13c48cfe7", "at": "2026-10-03 00:50", "dev": "RTX 5090", "ort": "1.30.0", "trt": "10.16.1", "cudnn": "9.19.0", "cuda": "13.0", "spin": true, "pm": "", "git": null, "bg": ["telecom-pg"], "tiers": [{"hz": 10.0, "ahz": 10.016391297345212, "p50": 1.9370883237570524, "p95": 2.693910663947462, "p99": 2.9897836688905954, "sp95": 2.5119291385635725, "miss": 0, "n": 600, "clk": 2445.0, "gpw": 67.339, "vgpu": null, "bw": null, "tj": 42.0, "gl": 1.0}, {"hz": 30.0, "ahz": 30.015782889382777, "p50": 1.753245247527957, "p95": 1.869032671675086, "p99": 2.043855073861778, "sp95": 1.6837244853377342, "miss": 0, "n": 1800, "clk": 2467.0, "gpw": 74.04150000000001, "vgpu": null, "bw": null, "tj": 41.0, "gl": 4.0}, {"hz": 100.0, "ahz": 100.0137656129672, "p50": 1.7297735903412104, "p95": 1.8015200505033135, "p99": 1.8949244963005185, "sp95": 1.6043626703321934, "miss": 0, "n": 6000, "clk": 2527.0, "gpw": 97.6315, "vgpu": null, "bw": null, "tj": 42.0, "gl": 13.0}]}, {"set": "bench_5090_nospin", "label": "cuda_fp32", "rep": 1, "order": 2, "id": "a5badb4ea8c5", "at": "2026-10-03 02:06", "dev": "RTX 5090", "ort": "1.30.0", "trt": null, "cudnn": "9.19.0", "cuda": "13.0", "spin": false, "pm": "", "git": null, "bg": ["telecom-pg"], "tiers": [{"hz": 10.0, "ahz": 10.016173968807449, "p50": 2.960172249004245, "p95": 4.025368369184433, "p99": 4.358414295129478, "sp95": 3.8780983071774244, "miss": 0, "n": 600, "clk": 2445.0, "gpw": 70.486, "vgpu": null, "bw": null, "tj": 47.0, "gl": 2.0}, {"hz": 26.0, "ahz": 26.015454816569896, "p50": 2.6915152557194233, "p95": 2.8230908093973994, "p99": 2.959480066783726, "sp95": 2.6473865378648043, "miss": 0, "n": 1560, "clk": 2467.0, "gpw": 74.9865, "vgpu": null, "bw": null, "tj": 45.0, "gl": 6.0}, {"hz": 30.0, "ahz": 30.015306575302095, "p50": 2.747948747128248, "p95": 2.853136812336743, "p99": 2.947173835709691, "sp95": 2.6811477495357394, "miss": 0, "n": 1800, "clk": 2475.0, "gpw": 76.0425, "vgpu": null, "bw": null, "tj": 44.0, "gl": 6.0}, {"hz": 100.0, "ahz": 100.01212936780804, "p50": 2.737766830250621, "p95": 2.8379101306200027, "p99": 2.896432615816593, "sp95": 2.6455477345734835, "miss": 0, "n": 6000, "clk": 2565.0, "gpw": 102.4305, "vgpu": null, "bw": null, "tj": 45.0, "gl": 19.0}]}, {"set": "bench_5090_nospin", "label": "cuda_fp32", "rep": 2, "order": 4, "id": "bfc74fa256ad", "at": "2026-10-03 02:15", "dev": "RTX 5090", "ort": "1.30.0", "trt": null, "cudnn": "9.19.0", "cuda": "13.0", "spin": false, "pm": "", "git": null, "bg": ["telecom-pg"], "tiers": [{"hz": 10.0, "ahz": 10.016167998704887, "p50": 2.987046493217349, "p95": 4.054863681085408, "p99": 4.6802462777122855, "sp95": 3.900370607152581, "miss": 0, "n": 600, "clk": 2445.0, "gpw": 68.16300000000001, "vgpu": null, "bw": null, "tj": 42.0, "gl": 2.0}, {"hz": 26.0, "ahz": 26.01548932395735, "p50": 2.7537294663488865, "p95": 2.954169292934239, "p99": 3.1384730106219663, "sp95": 2.7782979188486934, "miss": 0, "n": 1560, "clk": 2475.0, "gpw": 73.9465, "vgpu": null, "bw": null, "tj": 41.0, "gl": 4.0}, {"hz": 30.0, "ahz": 30.015051109455285, "p50": 2.7672310825437307, "p95": 3.1726483022794127, "p99": 3.884395915083587, "sp95": 3.032321250066161, "miss": 0, "n": 1800, "clk": 2482.0, "gpw": 75.9995, "vgpu": null, "bw": null, "tj": 42.0, "gl": 6.0}, {"hz": 100.0, "ahz": 100.01194555654538, "p50": 2.7223529759794474, "p95": 3.0472963815554976, "p99": 3.631333475932479, "sp95": 2.9007651144638658, "miss": 0, "n": 6000, "clk": 2580.0, "gpw": 103.122, "vgpu": null, "bw": null, "tj": 43.0, "gl": 20.0}]}, {"set": "bench_5090_nospin", "label": "cuda_fp32", "rep": 3, "order": 6, "id": "074f764bdd72", "at": "2026-10-03 02:24", "dev": "RTX 5090", "ort": "1.30.0", "trt": null, "cudnn": "9.19.0", "cuda": "13.0", "spin": false, "pm": "", "git": null, "bg": ["telecom-pg"], "tiers": [{"hz": 10.0, "ahz": 10.01620779895208, "p50": 2.913706935942173, "p95": 3.4353870665654536, "p99": 3.792883693240583, "sp95": 3.2636995427310462, "miss": 0, "n": 600, "clk": 2452.0, "gpw": 68.4505, "vgpu": null, "bw": null, "tj": 42.0, "gl": 2.0}, {"hz": 26.0, "ahz": 26.015448130908005, "p50": 2.8295007068663836, "p95": 2.9526012716814876, "p99": 3.0475738737732176, "sp95": 2.771406597457826, "miss": 0, "n": 1560, "clk": 2467.0, "gpw": 74.3575, "vgpu": null, "bw": null, "tj": 41.0, "gl": 6.0}, {"hz": 30.0, "ahz": 30.015277968060868, "p50": 2.8459702152758837, "p95": 2.944229729473591, "p99": 3.0028607370331883, "sp95": 2.754128142260015, "miss": 0, "n": 1800, "clk": 2475.0, "gpw": 75.894, "vgpu": null, "bw": null, "tj": 41.0, "gl": 6.0}, {"hz": 100.0, "ahz": 100.01194718053902, "p50": 2.7823036070913076, "p95": 2.9035717947408557, "p99": 2.9629782168194656, "sp95": 2.7242193929851055, "miss": 0, "n": 6000, "clk": 2572.0, "gpw": 103.16, "vgpu": null, "bw": null, "tj": 43.0, "gl": 20.0}]}, {"set": "bench_5090_nospin", "label": "trt_fp32", "rep": 1, "order": 1, "id": "dce28bab09d3", "at": "2026-10-03 02:02", "dev": "RTX 5090", "ort": "1.30.0", "trt": "10.16.1", "cudnn": "9.19.0", "cuda": "13.0", "spin": false, "pm": "", "git": null, "bg": ["telecom-pg"], "tiers": [{"hz": 10.0, "ahz": 10.016365030485767, "p50": 2.0559949334710836, "p95": 2.224191976711154, "p99": 2.2968112770467997, "sp95": 2.0522789796814322, "miss": 0, "n": 600, "clk": 2460.0, "gpw": 70.2675, "vgpu": null, "bw": null, "tj": 43.0, "gl": 2.0}, {"hz": 26.0, "ahz": 26.015834657023568, "p50": 1.834979746490717, "p95": 2.0381306298077106, "p99": 2.136370544321835, "sp95": 1.852978253737092, "miss": 0, "n": 1560, "clk": 2475.0, "gpw": 76.4515, "vgpu": null, "bw": null, "tj": 45.0, "gl": 5.0}, {"hz": 30.0, "ahz": 30.015800258659457, "p50": 1.809257548302412, "p95": 2.0334191154688597, "p99": 2.153425053693354, "sp95": 1.8685455899685621, "miss": 0, "n": 1800, "clk": 2475.0, "gpw": 78.241, "vgpu": null, "bw": null, "tj": 47.0, "gl": 5.0}, {"hz": 100.0, "ahz": 100.01391088671225, "p50": 1.714636106044054, "p95": 1.9062831066548824, "p99": 2.0677903015166526, "sp95": 1.7544882139191034, "miss": 0, "n": 6000, "clk": 2527.0, "gpw": 103.2285, "vgpu": null, "bw": null, "tj": 50.0, "gl": 13.0}]}, {"set": "bench_5090_nospin", "label": "trt_fp32", "rep": 2, "order": 3, "id": "e04db6fbf8c2", "at": "2026-10-03 02:11", "dev": "RTX 5090", "ort": "1.30.0", "trt": "10.16.1", "cudnn": "9.19.0", "cuda": "13.0", "spin": false, "pm": "", "git": null, "bg": ["telecom-pg"], "tiers": [{"hz": 10.0, "ahz": 10.016262229922372, "p50": 2.1932460367679596, "p95": 3.461405099369584, "p99": 4.0697133261710405, "sp95": 3.29662759322673, "miss": 0, "n": 600, "clk": 2445.0, "gpw": 68.111, "vgpu": null, "bw": null, "tj": 43.0, "gl": 1.0}, {"hz": 26.0, "ahz": 26.015821419462153, "p50": 1.9562318921089172, "p95": 2.1349114133045077, "p99": 2.219248376786709, "sp95": 1.9629137823358176, "miss": 0, "n": 1560, "clk": 2460.0, "gpw": 73.227, "vgpu": null, "bw": null, "tj": 42.5, "gl": 4.0}, {"hz": 30.0, "ahz": 30.01569503222445, "p50": 1.8953247927129269, "p95": 2.009845757856965, "p99": 2.0926898531615734, "sp95": 1.7917796736583114, "miss": 0, "n": 1800, "clk": 2467.0, "gpw": 74.513, "vgpu": null, "bw": null, "tj": 42.0, "gl": 4.0}, {"hz": 100.0, "ahz": 100.01362660992935, "p50": 1.8776925280690193, "p95": 1.9634146941825747, "p99": 2.0252302661538124, "sp95": 1.7497655237093568, "miss": 0, "n": 6000, "clk": 2527.0, "gpw": 97.7805, "vgpu": null, "bw": null, "tj": 43.0, "gl": 13.0}]}, {"set": "bench_5090_nospin", "label": "trt_fp32", "rep": 3, "order": 5, "id": "08723428443d", "at": "2026-10-03 02:19", "dev": "RTX 5090", "ort": "1.30.0", "trt": "10.16.1", "cudnn": "9.19.0", "cuda": "13.0", "spin": false, "pm": "", "git": null, "bg": ["telecom-pg"], "tiers": [{"hz": 10.0, "ahz": 10.016374212658402, "p50": 2.0464984700083733, "p95": 2.2898115683346987, "p99": 2.405409896746277, "sp95": 2.132571185939014, "miss": 0, "n": 600, "clk": 2452.0, "gpw": 68.264, "vgpu": null, "bw": null, "tj": 41.0, "gl": 2.0}, {"hz": 26.0, "ahz": 26.015830716583867, "p50": 1.7691906541585922, "p95": 2.0025537814944983, "p99": 2.1814114972949032, "sp95": 1.8367648823186753, "miss": 0, "n": 1560, "clk": 2460.0, "gpw": 72.315, "vgpu": null, "bw": null, "tj": 41.0, "gl": 4.0}, {"hz": 30.0, "ahz": 30.01578485491021, "p50": 1.7556499224156141, "p95": 2.0167109090834856, "p99": 2.19644530210644, "sp95": 1.8577282782644033, "miss": 0, "n": 1800, "clk": 2460.0, "gpw": 74.095, "vgpu": null, "bw": null, "tj": 41.0, "gl": 4.0}, {"hz": 100.0, "ahz": 100.01373694130285, "p50": 1.7537937965244055, "p95": 2.093233540654183, "p99": 3.1229820847511345, "sp95": 1.9603559514507654, "miss": 0, "n": 6000, "clk": 2527.0, "gpw": 97.622, "vgpu": null, "bw": null, "tj": 42.0, "gl": 13.0}]}, {"set": "bench_5090_rerun", "label": "cuda_fp32", "rep": 1, "order": 2, "id": "d595c7f68b48", "at": "2026-10-03 01:35", "dev": "RTX 5090", "ort": "1.30.0", "trt": null, "cudnn": "9.19.0", "cuda": "13.0", "spin": true, "pm": "", "git": null, "bg": ["telecom-pg"], "tiers": [{"hz": 10.0, "ahz": 10.01617626377482, "p50": 3.225619439035654, "p95": 3.7747399182990193, "p99": 6.825975305400788, "sp95": 3.6245448514819145, "miss": 0, "n": 600, "clk": 2482.0, "gpw": 74.01150000000001, "vgpu": null, "bw": null, "tj": 48.0, "gl": 4.0}, {"hz": 26.0, "ahz": 26.015224415041995, "p50": 3.114526392892003, "p95": 3.864697832614183, "p99": 6.968125379644342, "sp95": 3.6081901285797326, "miss": 0, "n": 1560, "clk": 2512.0, "gpw": 79.343, "vgpu": null, "bw": null, "tj": 45.0, "gl": 8.0}, {"hz": 30.0, "ahz": 30.01524507523134, "p50": 2.999915974214673, "p95": 3.5356296459212895, "p99": 7.182631269097327, "sp95": 3.372487262822687, "miss": 0, "n": 1800, "clk": 2505.0, "gpw": 78.8175, "vgpu": null, "bw": null, "tj": 44.0, "gl": 8.0}, {"hz": 100.0, "ahz": 100.01186579927086, "p50": 2.8426419012248516, "p95": 3.0137769645079975, "p99": 3.3520241221413025, "sp95": 2.8132116654887795, "miss": 0, "n": 6000, "clk": 2580.0, "gpw": 104.196, "vgpu": null, "bw": null, "tj": 45.0, "gl": 20.0}]}, {"set": "bench_5090_rerun", "label": "cuda_fp32", "rep": 2, "order": 4, "id": "9720bca8a2bd", "at": "2026-10-03 01:44", "dev": "RTX 5090", "ort": "1.30.0", "trt": null, "cudnn": "9.19.0", "cuda": "13.0", "spin": true, "pm": "", "git": null, "bg": ["telecom-pg"], "tiers": [{"hz": 10.0, "ahz": 10.016234799774454, "p50": 2.826286479830742, "p95": 3.735257522203027, "p99": 6.352928625419735, "sp95": 3.5678207408636786, "miss": 0, "n": 600, "clk": 2445.0, "gpw": 68.731, "vgpu": null, "bw": null, "tj": 42.0, "gl": 2.0}, {"hz": 26.0, "ahz": 26.015269665431173, "p50": 2.9267023783177137, "p95": 3.2974950037896633, "p99": 4.007722004316748, "sp95": 3.131262818351388, "miss": 0, "n": 1560, "clk": 2482.0, "gpw": 74.52199999999999, "vgpu": null, "bw": null, "tj": 42.0, "gl": 5.0}, {"hz": 30.0, "ahz": 30.015277728000985, "p50": 2.8804950416088104, "p95": 3.292883583344519, "p99": 3.6995396018028255, "sp95": 3.1335609732195735, "miss": 0, "n": 1800, "clk": 2490.0, "gpw": 76.5535, "vgpu": null, "bw": null, "tj": 41.0, "gl": 7.0}, {"hz": 100.0, "ahz": 100.01217862967039, "p50": 2.734269481152296, "p95": 2.874734904617071, "p99": 3.1517070624977372, "sp95": 2.685256930999458, "miss": 0, "n": 6000, "clk": 2565.0, "gpw": 101.338, "vgpu": null, "bw": null, "tj": 43.0, "gl": 19.0}]}, {"set": "bench_5090_rerun", "label": "cuda_fp32", "rep": 3, "order": 6, "id": "f6384ee9d86f", "at": "2026-10-03 01:52", "dev": "RTX 5090", "ort": "1.30.0", "trt": null, "cudnn": "9.19.0", "cuda": "13.0", "spin": true, "pm": "", "git": null, "bg": ["telecom-pg"], "tiers": [{"hz": 10.0, "ahz": 10.016203727627795, "p50": 2.936362288892269, "p95": 4.104975354857743, "p99": 4.696497586555778, "sp95": 3.937898157164454, "miss": 0, "n": 600, "clk": 2445.0, "gpw": 68.1795, "vgpu": null, "bw": null, "tj": 41.0, "gl": 2.0}, {"hz": 26.0, "ahz": 26.015489067180965, "p50": 2.7827308513224125, "p95": 4.877515370026229, "p99": 6.976219583302738, "sp95": 4.7014037612825605, "miss": 0, "n": 1560, "clk": 2475.0, "gpw": 74.2405, "vgpu": null, "bw": null, "tj": 43.0, "gl": 6.0}, {"hz": 30.0, "ahz": 30.015270727809874, "p50": 2.726797480136156, "p95": 2.883980143815279, "p99": 4.2616643058136106, "sp95": 2.710626507177949, "miss": 0, "n": 1800, "clk": 2475.0, "gpw": 76.0435, "vgpu": null, "bw": null, "tj": 42.0, "gl": 6.0}, {"hz": 100.0, "ahz": 100.01184945456468, "p50": 2.699616365134716, "p95": 2.7938398998230696, "p99": 2.846670071594417, "sp95": 2.608874929137528, "miss": 0, "n": 6000, "clk": 2565.0, "gpw": 101.8535, "vgpu": null, "bw": null, "tj": 44.0, "gl": 19.0}]}, {"set": "bench_5090_rerun", "label": "trt_fp32", "rep": 1, "order": 1, "id": "8449c82559ae", "at": "2026-10-03 01:30", "dev": "RTX 5090", "ort": "1.30.0", "trt": "10.16.1", "cudnn": "9.19.0", "cuda": "13.0", "spin": true, "pm": "", "git": null, "bg": ["telecom-pg"], "tiers": [{"hz": 10.0, "ahz": 10.016374724462338, "p50": 1.9579732324928045, "p95": 2.286839298903942, "p99": 2.6076797302812316, "sp95": 2.0980552071705456, "miss": 0, "n": 600, "clk": 2445.0, "gpw": 69.25200000000001, "vgpu": null, "bw": null, "tj": 45.0, "gl": 1.0}, {"hz": 26.0, "ahz": 26.015831974437386, "p50": 1.9396503921598196, "p95": 2.19240328297019, "p99": 2.342200656421483, "sp95": 2.0047929137945175, "miss": 0, "n": 1560, "clk": 2467.0, "gpw": 76.289, "vgpu": null, "bw": null, "tj": 47.0, "gl": 4.0}, {"hz": 30.0, "ahz": 30.015755116109162, "p50": 2.0788731053471565, "p95": 2.302483539097011, "p99": 2.4042681138962507, "sp95": 2.152583049610257, "miss": 0, "n": 1800, "clk": 2490.0, "gpw": 80.237, "vgpu": null, "bw": null, "tj": 49.0, "gl": 6.0}, {"hz": 100.0, "ahz": 100.01377427199473, "p50": 1.8294143956154585, "p95": 2.149593783542514, "p99": 2.2957940306514506, "sp95": 1.9921747036278248, "miss": 0, "n": 6000, "clk": 2557.0, "gpw": 105.1995, "vgpu": null, "bw": null, "tj": 51.0, "gl": 15.0}]}, {"set": "bench_5090_rerun", "label": "trt_fp32", "rep": 2, "order": 3, "id": "7d8937c8daf1", "at": "2026-10-03 01:39", "dev": "RTX 5090", "ort": "1.30.0", "trt": "10.16.1", "cudnn": "9.19.0", "cuda": "13.0", "spin": true, "pm": "", "git": null, "bg": ["telecom-pg"], "tiers": [{"hz": 10.0, "ahz": 10.016270589829194, "p50": 1.9762462470680475, "p95": 2.919929195195435, "p99": 4.101559650152922, "sp95": 2.7716846670955415, "miss": 0, "n": 600, "clk": 2445.0, "gpw": 68.932, "vgpu": null, "bw": null, "tj": 43.0, "gl": 1.0}, {"hz": 26.0, "ahz": 26.01593200246618, "p50": 1.7538275569677353, "p95": 1.9221268827095628, "p99": 2.057362771593035, "sp95": 1.7548276111483574, "miss": 0, "n": 1560, "clk": 2460.0, "gpw": 73.4815, "vgpu": null, "bw": null, "tj": 43.0, "gl": 3.0}, {"hz": 30.0, "ahz": 30.01524870851852, "p50": 1.7390020657330751, "p95": 1.9457849906757474, "p99": 2.121006199158728, "sp95": 1.777170435525477, "miss": 0, "n": 1800, "clk": 2460.0, "gpw": 74.45849999999999, "vgpu": null, "bw": null, "tj": 42.0, "gl": 4.0}, {"hz": 100.0, "ahz": 100.01380102773163, "p50": 1.7402067314833403, "p95": 1.8365208758041263, "p99": 1.947879795916379, "sp95": 1.6126933973282576, "miss": 0, "n": 6000, "clk": 2527.0, "gpw": 97.64349999999999, "vgpu": null, "bw": null, "tj": 44.0, "gl": 13.0}]}, {"set": "bench_5090_rerun", "label": "trt_fp32", "rep": 3, "order": 5, "id": "507e6401e162", "at": "2026-10-03 01:48", "dev": "RTX 5090", "ort": "1.30.0", "trt": "10.16.1", "cudnn": "9.19.0", "cuda": "13.0", "spin": true, "pm": "", "git": null, "bg": ["telecom-pg"], "tiers": [{"hz": 10.0, "ahz": 10.016359156395774, "p50": 1.9562244415283203, "p95": 2.7071229647845025, "p99": 3.1033806782215834, "sp95": 2.521098800934851, "miss": 0, "n": 600, "clk": 2445.0, "gpw": 67.5705, "vgpu": null, "bw": null, "tj": 41.0, "gl": 1.0}, {"hz": 26.0, "ahz": 26.01590918800658, "p50": 1.772050280123949, "p95": 1.9385778810828924, "p99": 2.0353357354179025, "sp95": 1.7585597233846784, "miss": 0, "n": 1560, "clk": 2460.0, "gpw": 72.699, "vgpu": null, "bw": null, "tj": 41.0, "gl": 3.0}, {"hz": 30.0, "ahz": 30.01577437210023, "p50": 1.7694206908345222, "p95": 1.8881313735619187, "p99": 1.9976288313046096, "sp95": 1.6832924913614988, "miss": 0, "n": 1800, "clk": 2460.0, "gpw": 73.9285, "vgpu": null, "bw": null, "tj": 41.0, "gl": 4.0}, {"hz": 100.0, "ahz": 100.01384578161468, "p50": 1.7225660849362612, "p95": 1.9520595436915755, "p99": 2.119655176065862, "sp95": 1.8055383116006851, "miss": 0, "n": 6000, "clk": 2527.0, "gpw": 97.45949999999999, "vgpu": null, "bw": null, "tj": 42.0, "gl": 13.0}]}, {"set": "bench_thor", "label": "cuda_fp32", "rep": 1, "order": 2, "id": "b3e28d42d75e", "at": "2026-10-03 00:49", "dev": "Jetson AGX Thor", "ort": "1.24.0", "trt": "10.13.3", "cudnn": "9.12.0", "cuda": "13.2", "spin": true, "pm": "120W", "git": null, "bg": ["physical-ai-vllm"], "tiers": [{"hz": 10.0, "ahz": 10.012705509015623, "p50": 14.550539475749247, "p95": 24.705794990586583, "p99": 24.951592070865445, "sp95": 24.475713791616727, "miss": 0, "n": 600, "clk": null, "gpw": null, "vgpu": 3.931, "bw": 21.881, "tj": 39.468, "gl": null}, {"hz": 30.0, "ahz": 30.01080539849069, "p50": 12.82436381734442, "p95": 14.079038370982744, "p99": 14.568226105475333, "sp95": 14.014045242220163, "miss": 0, "n": 1800, "clk": null, "gpw": null, "vgpu": 6.289, "bw": 23.728, "tj": 39.75, "gl": null}, {"hz": 100.0, "ahz": 100.0058360439155, "p50": 6.513044500024989, "p95": 6.943352505913936, "p99": 7.121862507483457, "sp95": 6.8780405999859795, "miss": 0, "n": 6000, "clk": null, "gpw": null, "vgpu": 21.219, "bw": 46.047, "tj": 43.5775, "gl": null}]}, {"set": "bench_thor", "label": "cuda_fp32", "rep": 2, "order": 4, "id": "e3f0eb02f782", "at": "2026-10-03 00:56", "dev": "Jetson AGX Thor", "ort": "1.24.0", "trt": "10.13.3", "cudnn": "9.12.0", "cuda": "13.2", "spin": true, "pm": "120W", "git": null, "bg": ["physical-ai-vllm"], "tiers": [{"hz": 10.0, "ahz": 10.015335770237984, "p50": 14.063827009522356, "p95": 24.515869362221565, "p99": 24.748338145727757, "sp95": 24.30716098897392, "miss": 0, "n": 600, "clk": null, "gpw": null, "vgpu": 3.931, "bw": 21.657, "tj": 40.218, "gl": null}, {"hz": 30.0, "ahz": 30.0099275115989, "p50": 12.9637351637939, "p95": 14.050478108401876, "p99": 14.69463212240953, "sp95": 13.986066050711088, "miss": 0, "n": 1800, "clk": null, "gpw": null, "vgpu": 6.289, "bw": 22.442999999999998, "tj": 40.312, "gl": null}, {"hz": 100.0, "ahz": 100.00572493437744, "p50": 6.561842485098168, "p95": 7.010300245019607, "p99": 7.1759034335264005, "sp95": 6.9450182127184235, "miss": 0, "n": 6000, "clk": null, "gpw": null, "vgpu": 21.219, "bw": 47.058, "tj": 44.109, "gl": null}]}, {"set": "bench_thor", "label": "cuda_fp32", "rep": 3, "order": 6, "id": "3ce11a8f2553", "at": "2026-10-03 01:02", "dev": "Jetson AGX Thor", "ort": "1.24.0", "trt": "10.13.3", "cudnn": "9.12.0", "cuda": "13.2", "spin": true, "pm": "120W", "git": null, "bg": ["physical-ai-vllm"], "tiers": [{"hz": 10.0, "ahz": 10.01363984402374, "p50": 12.232793495059013, "p95": 24.26474055100698, "p99": 24.65635362517787, "sp95": 24.188690906157717, "miss": 0, "n": 600, "clk": null, "gpw": null, "vgpu": 3.931, "bw": 21.774, "tj": 40.562, "gl": null}, {"hz": 30.0, "ahz": 30.010153037973357, "p50": 12.98666418006178, "p95": 14.140638422395568, "p99": 14.643919911468402, "sp95": 14.075072694686241, "miss": 0, "n": 1800, "clk": null, "gpw": null, "vgpu": 6.289, "bw": 21.923000000000002, "tj": 40.593, "gl": null}, {"hz": 100.0, "ahz": 100.00546915743851, "p50": 6.526421493617818, "p95": 6.9354072358692065, "p99": 7.013714459608309, "sp95": 6.869498292508069, "miss": 0, "n": 6000, "clk": null, "gpw": null, "vgpu": 21.219, "bw": 46.211, "tj": 44.3275, "gl": null}]}, {"set": "bench_thor", "label": "trt_fp32", "rep": 1, "order": 1, "id": "fe22014b0df3", "at": "2026-10-03 00:46", "dev": "Jetson AGX Thor", "ort": "1.24.0", "trt": "10.13.3", "cudnn": "9.12.0", "cuda": "13.2", "spin": true, "pm": "120W", "git": null, "bg": ["physical-ai-vllm"], "tiers": [{"hz": 10.0, "ahz": 10.014937488407758, "p50": 10.589668992906809, "p95": 11.195744502765592, "p99": 11.451335986203048, "sp95": 11.038838639797177, "miss": 0, "n": 600, "clk": null, "gpw": null, "vgpu": 2.751, "bw": 20.85, "tj": 38.437, "gl": null}, {"hz": 30.0, "ahz": 30.011586940518395, "p50": 10.423933490528725, "p95": 10.951135410869028, "p99": 11.070255456143059, "sp95": 10.888393959612586, "miss": 0, "n": 1800, "clk": null, "gpw": null, "vgpu": 3.931, "bw": 21.389000000000003, "tj": 38.656, "gl": null}, {"hz": 100.0, "ahz": 100.00977632070446, "p50": 4.113767485250719, "p95": 4.3725851603085175, "p99": 4.658045808901079, "sp95": 4.309969948371872, "miss": 0, "n": 6000, "clk": null, "gpw": null, "vgpu": 11.007, "bw": 33.532, "tj": 40.4685, "gl": null}]}, {"set": "bench_thor", "label": "trt_fp32", "rep": 2, "order": 3, "id": "31c07eaf9db0", "at": "2026-10-03 00:52", "dev": "Jetson AGX Thor", "ort": "1.24.0", "trt": "10.13.3", "cudnn": "9.12.0", "cuda": "13.2", "spin": true, "pm": "120W", "git": null, "bg": ["physical-ai-vllm"], "tiers": [{"hz": 10.0, "ahz": 10.014852440952055, "p50": 11.06495400017593, "p95": 11.527774792921264, "p99": 11.714270126249176, "sp95": 11.367251507181209, "miss": 0, "n": 600, "clk": null, "gpw": null, "vgpu": 2.751, "bw": 20.908, "tj": 40.562, "gl": null}, {"hz": 30.0, "ahz": 30.011426397426913, "p50": 10.288743680575863, "p95": 10.94198053033324, "p99": 11.276362693752162, "sp95": 10.876906545308884, "miss": 0, "n": 1800, "clk": null, "gpw": null, "vgpu": 3.931, "bw": 21.173000000000002, "tj": 40.093, "gl": null}, {"hz": 100.0, "ahz": 100.00987095594479, "p50": 4.078954996657558, "p95": 4.400215108762496, "p99": 4.859275718044956, "sp95": 4.33710368233733, "miss": 0, "n": 6000, "clk": null, "gpw": null, "vgpu": 11.002, "bw": 34.506, "tj": 41.5, "gl": null}]}, {"set": "bench_thor", "label": "trt_fp32", "rep": 3, "order": 5, "id": "7a0dd886427b", "at": "2026-10-03 00:59", "dev": "Jetson AGX Thor", "ort": "1.24.0", "trt": "10.13.3", "cudnn": "9.12.0", "cuda": "13.2", "spin": true, "pm": "120W", "git": null, "bg": ["physical-ai-vllm"], "tiers": [{"hz": 10.0, "ahz": 10.014999668811818, "p50": 10.483649501111358, "p95": 11.310509043687485, "p99": 12.644400124554522, "sp95": 11.187072457687462, "miss": 0, "n": 600, "clk": null, "gpw": null, "vgpu": 2.751, "bw": 20.945, "tj": 40.937, "gl": null}, {"hz": 30.0, "ahz": 30.011269834550436, "p50": 10.37767248635646, "p95": 10.936518880771473, "p99": 11.504260608635377, "sp95": 10.874049598351121, "miss": 0, "n": 1800, "clk": null, "gpw": null, "vgpu": 3.931, "bw": 21.189, "tj": 40.437, "gl": null}, {"hz": 100.0, "ahz": 100.0101003183917, "p50": 4.074464508448727, "p95": 4.496975248912349, "p99": 4.758272844192106, "sp95": 4.43725398654351, "miss": 0, "n": 6000, "clk": null, "gpw": null, "vgpu": 11.002, "bw": 35.83, "tj": 41.796499999999995, "gl": null}]}, {"set": "bench_thor_4tier_spin", "label": "cuda_fp32", "rep": 1, "order": 2, "id": "75480be7827e", "at": "2026-10-03 02:10", "dev": "Jetson AGX Thor", "ort": "1.24.0", "trt": "10.13.3", "cudnn": "9.12.0", "cuda": "13.2", "spin": true, "pm": "120W", "git": null, "bg": [], "tiers": [{"hz": 10.0, "ahz": 10.013624627121592, "p50": 12.270491512026638, "p95": 24.74702934268862, "p99": 24.906709265196696, "sp95": 24.522960366448388, "miss": 0, "n": 600, "clk": null, "gpw": null, "vgpu": 3.931, "bw": 22.253, "tj": 39.093, "gl": null}, {"hz": 26.0, "ahz": 26.00952625254868, "p50": 14.551403000950813, "p95": 16.038150660460815, "p99": 16.55326964741107, "sp95": 15.973382457741536, "miss": 0, "n": 1560, "clk": null, "gpw": null, "vgpu": 5.503, "bw": 21.954, "tj": 39.281, "gl": null}, {"hz": 30.0, "ahz": 30.010545764304467, "p50": 13.20456615940202, "p95": 14.449626338318922, "p99": 14.899676287896, "sp95": 14.381910701922607, "miss": 0, "n": 1800, "clk": null, "gpw": null, "vgpu": 6.289, "bw": 22.779, "tj": 39.562, "gl": null}, {"hz": 100.0, "ahz": 100.00510282037621, "p50": 6.663794498308562, "p95": 7.12587580201216, "p99": 7.2594436319195665, "sp95": 7.0617271805531345, "miss": 0, "n": 6000, "clk": null, "gpw": null, "vgpu": 21.219, "bw": 45.164, "tj": 43.5155, "gl": null}]}, {"set": "bench_thor_4tier_spin", "label": "cuda_fp32", "rep": 2, "order": 4, "id": "2eb4c56bafbc", "at": "2026-10-03 02:18", "dev": "Jetson AGX Thor", "ort": "1.24.0", "trt": "10.13.3", "cudnn": "9.12.0", "cuda": "13.2", "spin": true, "pm": "120W", "git": null, "bg": [], "tiers": [{"hz": 10.0, "ahz": 10.012525133436274, "p50": 11.850976516143419, "p95": 25.056874215079006, "p99": 25.218649708549492, "sp95": 24.82647943397751, "miss": 0, "n": 600, "clk": null, "gpw": null, "vgpu": 4.324, "bw": 22.032, "tj": 40.187, "gl": null}, {"hz": 26.0, "ahz": 26.010548509896974, "p50": 14.591191415092908, "p95": 15.991611489153001, "p99": 16.494728911202404, "sp95": 15.929655834042933, "miss": 0, "n": 1560, "clk": null, "gpw": null, "vgpu": 5.503, "bw": 21.686999999999998, "tj": 40.187, "gl": null}, {"hz": 30.0, "ahz": 30.010314584635676, "p50": 13.209944008849561, "p95": 14.277958033198956, "p99": 14.610236971930135, "sp95": 14.215215806325432, "miss": 0, "n": 1800, "clk": null, "gpw": null, "vgpu": 6.289, "bw": 22.526, "tj": 40.312, "gl": null}, {"hz": 100.0, "ahz": 100.0057976677971, "p50": 6.725312981870957, "p95": 7.179453439312056, "p99": 7.347297262167558, "sp95": 7.115972356405109, "miss": 0, "n": 6000, "clk": null, "gpw": null, "vgpu": 21.219, "bw": 46.337, "tj": 44.1405, "gl": null}]}, {"set": "bench_thor_4tier_spin", "label": "cuda_fp32", "rep": 3, "order": 6, "id": "6a41e7ca8b08", "at": "2026-10-03 02:27", "dev": "Jetson AGX Thor", "ort": "1.24.0", "trt": "10.13.3", "cudnn": "9.12.0", "cuda": "13.2", "spin": true, "pm": "120W", "git": null, "bg": [], "tiers": [{"hz": 10.0, "ahz": 10.012593068756544, "p50": 15.567048525554128, "p95": 24.855768564157188, "p99": 25.170764057838824, "sp95": 24.659666439401917, "miss": 0, "n": 600, "clk": null, "gpw": null, "vgpu": 3.931, "bw": 21.759, "tj": 40.437, "gl": null}, {"hz": 26.0, "ahz": 26.010793487844616, "p50": 14.642991940490901, "p95": 16.076666919980198, "p99": 16.59996191097889, "sp95": 16.01338100299472, "miss": 0, "n": 1560, "clk": null, "gpw": null, "vgpu": 5.503, "bw": 22.414, "tj": 40.406, "gl": null}, {"hz": 30.0, "ahz": 30.01014575905764, "p50": 13.405880992650054, "p95": 14.514289966609795, "p99": 15.026131129416171, "sp95": 14.451744256075472, "miss": 0, "n": 1800, "clk": null, "gpw": null, "vgpu": 6.289, "bw": 22.037999999999997, "tj": 40.531, "gl": null}, {"hz": 100.0, "ahz": 100.00593119344697, "p50": 6.648311988101341, "p95": 7.147775430348702, "p99": 7.278711177059449, "sp95": 7.082262016774621, "miss": 0, "n": 6000, "clk": null, "gpw": null, "vgpu": 21.219, "bw": 48.119, "tj": 44.296499999999995, "gl": null}]}, {"set": "bench_thor_4tier_spin", "label": "trt_fp32", "rep": 1, "order": 1, "id": "61c5d5a8d0cb", "at": "2026-10-03 02:05", "dev": "Jetson AGX Thor", "ort": "1.24.0", "trt": "10.13.3", "cudnn": "9.12.0", "cuda": "13.2", "spin": true, "pm": "120W", "git": null, "bg": [], "tiers": [{"hz": 10.0, "ahz": 10.014900323100038, "p50": 10.600766996503808, "p95": 11.29335344012361, "p99": 11.656639096036088, "sp95": 11.087641032645479, "miss": 0, "n": 600, "clk": null, "gpw": null, "vgpu": 2.751, "bw": 20.668, "tj": 37.062, "gl": null}, {"hz": 26.0, "ahz": 26.011864493050222, "p50": 10.457706855959259, "p95": 11.073090096761007, "p99": 11.56893693463644, "sp95": 11.005745352304075, "miss": 0, "n": 1560, "clk": null, "gpw": null, "vgpu": 3.538, "bw": 20.98, "tj": 37.609, "gl": null}, {"hz": 30.0, "ahz": 30.01146595260327, "p50": 10.447417487739585, "p95": 10.974345008435193, "p99": 11.225403058924712, "sp95": 10.909577897109557, "miss": 0, "n": 1800, "clk": null, "gpw": null, "vgpu": 3.931, "bw": 21.12, "tj": 37.968, "gl": null}, {"hz": 100.0, "ahz": 100.00891939211024, "p50": 4.039308521896601, "p95": 4.61155972443521, "p99": 4.832279840193224, "sp95": 4.5467814125004224, "miss": 0, "n": 6000, "clk": null, "gpw": null, "vgpu": 11.007, "bw": 34.196, "tj": 39.937, "gl": null}]}, {"set": "bench_thor_4tier_spin", "label": "trt_fp32", "rep": 2, "order": 3, "id": "8e15bc722816", "at": "2026-10-03 02:14", "dev": "Jetson AGX Thor", "ort": "1.24.0", "trt": "10.13.3", "cudnn": "9.12.0", "cuda": "13.2", "spin": true, "pm": "120W", "git": null, "bg": [], "tiers": [{"hz": 10.0, "ahz": 10.014994943166554, "p50": 10.837354013347067, "p95": 11.370475792500656, "p99": 11.73180169891566, "sp95": 11.15453640522901, "miss": 0, "n": 600, "clk": null, "gpw": null, "vgpu": 2.751, "bw": 20.972, "tj": 40.4685, "gl": null}, {"hz": 26.0, "ahz": 26.012239061942836, "p50": 10.433505245600827, "p95": 11.034722566546407, "p99": 11.357664178358396, "sp95": 10.96885514416499, "miss": 0, "n": 1560, "clk": null, "gpw": null, "vgpu": 3.538, "bw": 21.206, "tj": 40.0155, "gl": null}, {"hz": 30.0, "ahz": 30.011582891392994, "p50": 10.473194997757673, "p95": 11.024315956456121, "p99": 11.590621318027843, "sp95": 10.961103296722285, "miss": 0, "n": 1800, "clk": null, "gpw": null, "vgpu": 3.931, "bw": 21.178, "tj": 39.812, "gl": null}, {"hz": 100.0, "ahz": 100.0096868232702, "p50": 4.069141490617767, "p95": 4.373263436718844, "p99": 4.686481237295085, "sp95": 4.308140794455539, "miss": 0, "n": 6000, "clk": null, "gpw": null, "vgpu": 11.002, "bw": 34.329, "tj": 41.375, "gl": null}]}, {"set": "bench_thor_4tier_spin", "label": "trt_fp32", "rep": 3, "order": 5, "id": "f3b4d05d7d6b", "at": "2026-10-03 02:23", "dev": "Jetson AGX Thor", "ort": "1.24.0", "trt": "10.13.3", "cudnn": "9.12.0", "cuda": "13.2", "spin": true, "pm": "120W", "git": null, "bg": [], "tiers": [{"hz": 10.0, "ahz": 10.01488737995898, "p50": 10.77454250480514, "p95": 11.307213202235289, "p99": 11.907837199687492, "sp95": 11.111192901444156, "miss": 0, "n": 600, "clk": null, "gpw": null, "vgpu": 2.751, "bw": 20.864, "tj": 41.031, "gl": null}, {"hz": 26.0, "ahz": 26.012161034282396, "p50": 10.449490408063866, "p95": 11.048520330223255, "p99": 11.751944270217791, "sp95": 10.9758653328754, "miss": 0, "n": 1560, "clk": null, "gpw": null, "vgpu": 3.538, "bw": 21.302999999999997, "tj": 40.5, "gl": null}, {"hz": 30.0, "ahz": 30.011194329550026, "p50": 10.464575985679403, "p95": 10.99033829086693, "p99": 11.334201688878238, "sp95": 10.925333297927864, "miss": 0, "n": 1800, "clk": null, "gpw": null, "vgpu": 3.931, "bw": 21.404000000000003, "tj": 40.25, "gl": null}, {"hz": 100.0, "ahz": 100.01048310385775, "p50": 3.96547099808231, "p95": 4.27214095252566, "p99": 4.583469301578589, "sp95": 4.210147600679193, "miss": 0, "n": 6000, "clk": null, "gpw": null, "vgpu": 11.002, "bw": 35.902, "tj": 41.656, "gl": null}]}, {"set": "bench_thor_nospin", "label": "cuda_fp32", "rep": 1, "order": 2, "id": "c69139ff77e0", "at": "2026-10-03 03:14", "dev": "Jetson AGX Thor", "ort": "1.24.0", "trt": "10.13.3", "cudnn": "9.12.0", "cuda": "13.2", "spin": false, "pm": "120W", "git": "6dad16b9", "bg": [], "tiers": [{"hz": 10.0, "ahz": 10.014796068685902, "p50": 11.358520510839298, "p95": 24.373312496754806, "p99": 24.676069357956294, "sp95": 24.24828704824904, "miss": 0, "n": 600, "clk": null, "gpw": null, "vgpu": 4.324, "bw": 22.143, "tj": 38.4525, "gl": null}, {"hz": 26.0, "ahz": 26.0104905497526, "p50": 14.631760874181055, "p95": 15.846426814096048, "p99": 16.384011394693516, "sp95": 15.785700944252312, "miss": 0, "n": 1560, "clk": null, "gpw": null, "vgpu": 5.503, "bw": 21.935, "tj": 38.593, "gl": null}, {"hz": 30.0, "ahz": 30.009498170723667, "p50": 13.102701501338743, "p95": 14.173539480543695, "p99": 14.578870324476156, "sp95": 14.112928936083335, "miss": 0, "n": 1800, "clk": null, "gpw": null, "vgpu": 6.289, "bw": 22.188000000000002, "tj": 38.875, "gl": null}, {"hz": 100.0, "ahz": 100.00507101383276, "p50": 6.766575985238887, "p95": 7.7070975821698084, "p99": 7.925001506519038, "sp95": 7.6425691091571935, "miss": 0, "n": 6000, "clk": null, "gpw": null, "vgpu": 21.219, "bw": 46.471000000000004, "tj": 42.812, "gl": null}]}, {"set": "bench_thor_nospin", "label": "cuda_fp32", "rep": 2, "order": 4, "id": "25466b70ceae", "at": "2026-10-03 03:22", "dev": "Jetson AGX Thor", "ort": "1.24.0", "trt": "10.13.3", "cudnn": "9.12.0", "cuda": "13.2", "spin": false, "pm": "120W", "git": "6dad16b9", "bg": [], "tiers": [{"hz": 10.0, "ahz": 10.01513916796058, "p50": 11.38564752181992, "p95": 24.50153770914767, "p99": 24.921114619937725, "sp95": 24.255833847564645, "miss": 0, "n": 600, "clk": null, "gpw": null, "vgpu": 4.324, "bw": 21.772, "tj": 39.5, "gl": null}, {"hz": 26.0, "ahz": 26.010381298071447, "p50": 14.321663446025923, "p95": 15.96121225738898, "p99": 16.527500251540914, "sp95": 15.896237590641249, "miss": 0, "n": 1560, "clk": null, "gpw": null, "vgpu": 5.503, "bw": 21.831, "tj": 39.468, "gl": null}, {"hz": 30.0, "ahz": 30.009767091335686, "p50": 13.262860680697486, "p95": 14.30628232046729, "p99": 14.69328553386731, "sp95": 14.241169895103667, "miss": 0, "n": 1800, "clk": null, "gpw": null, "vgpu": 6.289, "bw": 22.14, "tj": 39.562, "gl": null}, {"hz": 100.0, "ahz": 100.0050089292018, "p50": 6.567619522684254, "p95": 7.1920352973393165, "p99": 7.630757153092419, "sp95": 7.12638007971691, "miss": 0, "n": 6000, "clk": null, "gpw": null, "vgpu": 21.219, "bw": 49.94799999999999, "tj": 43.421499999999995, "gl": null}]}, {"set": "bench_thor_nospin", "label": "cuda_fp32", "rep": 3, "order": 6, "id": "7363a40f490a", "at": "2026-10-03 03:31", "dev": "Jetson AGX Thor", "ort": "1.24.0", "trt": "10.13.3", "cudnn": "9.12.0", "cuda": "13.2", "spin": false, "pm": "120W", "git": "6dad16b9", "bg": [], "tiers": [{"hz": 10.0, "ahz": 10.012871152525575, "p50": 11.351077002473176, "p95": 24.86936579371104, "p99": 25.00173516018549, "sp95": 24.62987583858194, "miss": 0, "n": 600, "clk": null, "gpw": null, "vgpu": 4.324, "bw": 21.9, "tj": 39.75, "gl": null}, {"hz": 26.0, "ahz": 26.01006016543929, "p50": 14.353109814692289, "p95": 15.946979964792263, "p99": 16.476999436563347, "sp95": 15.881505821016617, "miss": 0, "n": 1560, "clk": null, "gpw": null, "vgpu": 5.503, "bw": 21.587, "tj": 39.656, "gl": null}, {"hz": 30.0, "ahz": 30.010797364708154, "p50": 13.3622431603726, "p95": 14.391746361798141, "p99": 14.807284356793389, "sp95": 14.326618191262241, "miss": 0, "n": 1800, "clk": null, "gpw": null, "vgpu": 6.289, "bw": 22.024, "tj": 39.781, "gl": null}, {"hz": 100.0, "ahz": 100.00579556921615, "p50": 6.5550644940230995, "p95": 7.165024583810009, "p99": 7.564305557170885, "sp95": 7.101611190591939, "miss": 0, "n": 6000, "clk": null, "gpw": null, "vgpu": 21.219, "bw": 48.55, "tj": 43.5, "gl": null}]}, {"set": "bench_thor_nospin", "label": "trt_fp32", "rep": 1, "order": 1, "id": "69123edb77be", "at": "2026-10-03 03:09", "dev": "Jetson AGX Thor", "ort": "1.24.0", "trt": "10.13.3", "cudnn": "9.12.0", "cuda": "13.2", "spin": false, "pm": "120W", "git": "6dad16b9", "bg": [], "tiers": [{"hz": 10.0, "ahz": 10.014948122283142, "p50": 10.811044980073348, "p95": 11.163720421609469, "p99": 11.350284701911733, "sp95": 11.059700087935198, "miss": 0, "n": 600, "clk": null, "gpw": null, "vgpu": 2.3585000000000003, "bw": 20.598, "tj": 36.312, "gl": null}, {"hz": 26.0, "ahz": 26.01231487322648, "p50": 10.479379358002916, "p95": 11.022756969032343, "p99": 11.1862605297938, "sp95": 10.960677750699688, "miss": 0, "n": 1560, "clk": null, "gpw": null, "vgpu": 3.538, "bw": 21.054000000000002, "tj": 36.906, "gl": null}, {"hz": 30.0, "ahz": 30.01146827236478, "p50": 10.408060508780181, "p95": 10.9793640425778, "p99": 11.433302932127845, "sp95": 10.91356203542091, "miss": 0, "n": 1800, "clk": null, "gpw": null, "vgpu": 3.931, "bw": 21.094, "tj": 37.25, "gl": null}, {"hz": 100.0, "ahz": 100.01085105733279, "p50": 3.5627369943540543, "p95": 4.11583676468581, "p99": 4.3778612033929685, "sp95": 4.054346900375094, "miss": 0, "n": 6000, "clk": null, "gpw": null, "vgpu": 12.186, "bw": 36.263999999999996, "tj": 39.4525, "gl": null}]}, {"set": "bench_thor_nospin", "label": "trt_fp32", "rep": 2, "order": 3, "id": "1e7eeee5bc57", "at": "2026-10-03 03:18", "dev": "Jetson AGX Thor", "ort": "1.24.0", "trt": "10.13.3", "cudnn": "9.12.0", "cuda": "13.2", "spin": false, "pm": "120W", "git": "6dad16b9", "bg": [], "tiers": [{"hz": 10.0, "ahz": 10.01483690576632, "p50": 10.605460993247107, "p95": 11.351430608192459, "p99": 11.832084314955864, "sp95": 11.127333506010473, "miss": 0, "n": 600, "clk": null, "gpw": null, "vgpu": 2.751, "bw": 20.92, "tj": 39.781, "gl": null}, {"hz": 26.0, "ahz": 26.012015576880593, "p50": 10.46389625116717, "p95": 11.050341674126685, "p99": 11.373697344679385, "sp95": 10.978581465315074, "miss": 0, "n": 1560, "clk": null, "gpw": null, "vgpu": 3.538, "bw": 21.188, "tj": 39.312, "gl": null}, {"hz": 30.0, "ahz": 30.011608183928818, "p50": 10.319322667783126, "p95": 10.987317911349237, "p99": 11.333799863641616, "sp95": 10.920782937319018, "miss": 0, "n": 1800, "clk": null, "gpw": null, "vgpu": 3.931, "bw": 21.240000000000002, "tj": 39.1405, "gl": null}, {"hz": 100.0, "ahz": 100.00980567645242, "p50": 3.9122609741752967, "p95": 4.246741633687634, "p99": 4.517100826196838, "sp95": 4.185893334215507, "miss": 0, "n": 6000, "clk": null, "gpw": null, "vgpu": 11.007, "bw": 34.65, "tj": 40.687, "gl": null}]}, {"set": "bench_thor_nospin", "label": "trt_fp32", "rep": 3, "order": 5, "id": "34270efa50ae", "at": "2026-10-03 03:27", "dev": "Jetson AGX Thor", "ort": "1.24.0", "trt": "10.13.3", "cudnn": "9.12.0", "cuda": "13.2", "spin": false, "pm": "120W", "git": "6dad16b9", "bg": [], "tiers": [{"hz": 10.0, "ahz": 10.0148962008404, "p50": 10.753471491625533, "p95": 11.301195772830397, "p99": 11.56033572711749, "sp95": 11.102621151076164, "miss": 0, "n": 600, "clk": null, "gpw": null, "vgpu": 2.751, "bw": 20.854, "tj": 40.187, "gl": null}, {"hz": 26.0, "ahz": 26.01224747957191, "p50": 10.461111654876731, "p95": 11.04346606443869, "p99": 11.384681055205874, "sp95": 10.978723701555282, "miss": 0, "n": 1560, "clk": null, "gpw": null, "vgpu": 3.538, "bw": 21.122, "tj": 39.671499999999995, "gl": null}, {"hz": 30.0, "ahz": 30.01151263983323, "p50": 10.429278336232528, "p95": 10.96991146914661, "p99": 11.114707758533768, "sp95": 10.90940425201552, "miss": 0, "n": 1800, "clk": null, "gpw": null, "vgpu": 3.931, "bw": 21.278, "tj": 39.437, "gl": null}, {"hz": 100.0, "ahz": 100.00979907508876, "p50": 4.126348023419268, "p95": 4.308187466813251, "p99": 4.737480451585725, "sp95": 4.243048356147483, "miss": 0, "n": 6000, "clk": null, "gpw": null, "vgpu": 11.002, "bw": 34.739000000000004, "tj": 40.906, "gl": null}]}, {"set": "bench_thor_rerun_stopped", "label": "trt_fp32", "rep": 1, "order": 1, "id": "b4cb3cc63b85", "at": "2026-10-03 01:30", "dev": "Jetson AGX Thor", "ort": "1.24.0", "trt": "10.13.3", "cudnn": "9.12.0", "cuda": "13.2", "spin": true, "pm": "120W", "git": null, "bg": ["physical-ai-vllm"], "tiers": [{"hz": 10.0, "ahz": 10.014824454580511, "p50": 10.520783995161764, "p95": 11.184837756445631, "p99": 11.738757525163237, "sp95": 10.9731522607035, "miss": 0, "n": 600, "clk": null, "gpw": null, "vgpu": 2.751, "bw": 20.837, "tj": 37.593, "gl": null}, {"hz": 26.0, "ahz": 26.012269846352986, "p50": 10.366480928496458, "p95": 10.951172816567123, "p99": 11.113013608555775, "sp95": 10.886320995632559, "miss": 0, "n": 1560, "clk": null, "gpw": null, "vgpu": 3.538, "bw": 21.28, "tj": 38.0, "gl": null}, {"hz": 30.0, "ahz": 30.011607676533114, "p50": 10.129585163667798, "p95": 10.859341009927448, "p99": 11.019379284989554, "sp95": 10.783072817139328, "miss": 0, "n": 1800, "clk": null, "gpw": null, "vgpu": 3.931, "bw": 21.182000000000002, "tj": 38.312, "gl": null}, {"hz": 100.0, "ahz": 100.01019717638769, "p50": 4.0643840038683265, "p95": 4.497203878418077, "p99": 4.757095637032762, "sp95": 4.430581851920579, "miss": 0, "n": 6000, "clk": null, "gpw": null, "vgpu": 11.007, "bw": 35.288, "tj": 40.187, "gl": null}]}, {"set": "field_orin", "label": "cuda_fp32", "rep": 1, "order": 2, "id": "944201b93330", "at": "2026-10-03 02:40", "dev": "Jetson Orin NX", "ort": "1.24.0", "trt": "10.7.0", "cudnn": "9.3.0", "cuda": "12.6", "spin": false, "pm": "MAXN_SUPER", "git": null, "bg": [], "tiers": [{"hz": 10.0, "ahz": 10.009110783581976, "p50": 47.3533390004377, "p95": 61.23819600170464, "p99": 61.89761945930513, "sp95": 61.14831365148348, "miss": 589, "n": 600, "clk": null, "gpw": null, "vgpu": 2.38, "bw": 8.16, "tj": 65.99950000000001, "gl": 33.5}, {"hz": 26.0, "ahz": 26.005130472875344, "p50": 26.390270229967427, "p95": 29.220989553232357, "p99": 29.456790560179797, "sp95": 29.140839600040636, "miss": 0, "n": 1560, "clk": null, "gpw": null, "vgpu": 5.315, "bw": 13.617, "tj": 65.60900000000001, "gl": 65.5}, {"hz": 30.0, "ahz": 30.00451493238561, "p50": 24.223016165706213, "p95": 24.464755382723524, "p99": 24.60937622918209, "sp95": 24.380012799701944, "miss": 0, "n": 1800, "clk": null, "gpw": null, "vgpu": 6.545, "bw": 15.218, "tj": 67.5775, "gl": 67.5}, {"hz": 100.0, "ahz": 49.750000566531995, "p50": 30263.03543150061, "p95": 57567.895190901436, "p99": 60003.53660161167, "sp95": 20.41499444985675, "miss": 5998, "n": 6000, "clk": null, "gpw": null, "vgpu": 12.839, "bw": 23.172, "tj": 74.875, "gl": 88.0}]}, {"set": "field_orin", "label": "cuda_fp32", "rep": 2, "order": 4, "id": "ca93d4f1ea5c", "at": "2026-10-03 02:50", "dev": "Jetson Orin NX", "ort": "1.24.0", "trt": "10.7.0", "cudnn": "9.3.0", "cuda": "12.6", "spin": false, "pm": "MAXN_SUPER", "git": null, "bg": [], "tiers": [{"hz": 10.0, "ahz": 10.010138916684195, "p50": 47.79058000076475, "p95": 60.98194984970178, "p99": 61.77236498129787, "sp95": 60.88261340055396, "miss": 588, "n": 600, "clk": null, "gpw": null, "vgpu": 2.331, "bw": 8.155, "tj": 66.48400000000001, "gl": 16.5}, {"hz": 26.0, "ahz": 26.00508821277131, "p50": 26.367714346633875, "p95": 29.14335474069958, "p99": 29.367878080374794, "sp95": 29.06751320069816, "miss": 0, "n": 1560, "clk": null, "gpw": null, "vgpu": 5.304, "bw": 13.608, "tj": 66.0, "gl": 61.0}, {"hz": 30.0, "ahz": 30.004529204187037, "p50": 24.22658933301136, "p95": 24.4432105814667, "p99": 24.57674393279376, "sp95": 24.366146650572773, "miss": 0, "n": 1800, "clk": null, "gpw": null, "vgpu": 6.444, "bw": 15.165, "tj": 67.75, "gl": 64.0}, {"hz": 100.0, "ahz": 49.69310532016309, "p50": 30383.29642750068, "p95": 57737.70186955044, "p99": 60144.32192588203, "sp95": 20.44254239899601, "miss": 5998, "n": 6000, "clk": null, "gpw": null, "vgpu": 12.743, "bw": 23.141, "tj": 74.968, "gl": 88.0}]}, {"set": "field_orin", "label": "cuda_fp32", "rep": 3, "order": 6, "id": "78aeed2a4e68", "at": "2026-10-03 03:00", "dev": "Jetson Orin NX", "ort": "1.24.0", "trt": "10.7.0", "cudnn": "9.3.0", "cuda": "12.6", "spin": false, "pm": "MAXN_SUPER", "git": null, "bg": [], "tiers": [{"hz": 10.0, "ahz": 10.008620399561789, "p50": 47.72895850146597, "p95": 59.62633454901151, "p99": 61.57215973120401, "sp95": 59.53930839996246, "miss": 590, "n": 600, "clk": null, "gpw": null, "vgpu": 2.328, "bw": 8.15, "tj": 66.406, "gl": 15.0}, {"hz": 26.0, "ahz": 26.005225909645116, "p50": 26.373042192062712, "p95": 29.073387818698393, "p99": 29.3365352962428, "sp95": 29.008373599845072, "miss": 0, "n": 1560, "clk": null, "gpw": null, "vgpu": 5.308, "bw": 13.686, "tj": 65.98400000000001, "gl": 69.0}, {"hz": 30.0, "ahz": 30.00473891896099, "p50": 24.231766165939916, "p95": 24.46310358291157, "p99": 24.616787123432005, "sp95": 24.374249200627673, "miss": 0, "n": 1800, "clk": null, "gpw": null, "vgpu": 6.44, "bw": 15.198, "tj": 67.593, "gl": 65.5}, {"hz": 100.0, "ahz": 49.60244600614803, "p50": 30491.40319849994, "p95": 57933.477876949386, "p99": 60359.54586623982, "sp95": 20.47404889990503, "miss": 5998, "n": 6000, "clk": null, "gpw": null, "vgpu": 12.735, "bw": 23.125, "tj": 74.75, "gl": 88.0}]}, {"set": "field_orin", "label": "trt_fp32", "rep": 1, "order": 1, "id": "0fe634574f25", "at": "2026-10-03 02:35", "dev": "Jetson Orin NX", "ort": "1.24.0", "trt": "10.7.0", "cudnn": "9.3.0", "cuda": "12.6", "spin": false, "pm": "MAXN_SUPER", "git": null, "bg": [], "tiers": [{"hz": 10.0, "ahz": 10.011110561925285, "p50": 33.679903500342334, "p95": 33.9579561014034, "p99": 34.10299227038195, "sp95": 33.845122649381665, "miss": 565, "n": 600, "clk": null, "gpw": null, "vgpu": 1.558, "bw": 7.013, "tj": 58.468, "gl": 0.0}, {"hz": 26.0, "ahz": 26.00676260653178, "p50": 22.846925960948283, "p95": 23.103780588007794, "p99": 23.283062893606257, "sp95": 23.010383100518084, "miss": 0, "n": 1560, "clk": null, "gpw": null, "vgpu": 2.912, "bw": 9.132, "tj": 59.687, "gl": 53.0}, {"hz": 30.0, "ahz": 30.005253998988945, "p50": 22.81778199994733, "p95": 23.0527215490838, "p99": 23.218903451452206, "sp95": 22.96099364912152, "miss": 0, "n": 1800, "clk": null, "gpw": null, "vgpu": 3.201, "bw": 9.708, "tj": 61.0, "gl": 60.5}, {"hz": 100.0, "ahz": 83.45481968735436, "p50": 5950.355328501246, "p95": 11300.450471300246, "p99": 11785.712695711263, "sp95": 12.133305999668664, "miss": 5989, "n": 6000, "clk": null, "gpw": null, "vgpu": 12.752, "bw": 23.808, "tj": 71.375, "gl": 88.0}]}, {"set": "field_orin", "label": "trt_fp32", "rep": 2, "order": 3, "id": "f079ba20abf0", "at": "2026-10-03 02:45", "dev": "Jetson Orin NX", "ort": "1.24.0", "trt": "10.7.0", "cudnn": "9.3.0", "cuda": "12.6", "spin": false, "pm": "MAXN_SUPER", "git": null, "bg": [], "tiers": [{"hz": 10.0, "ahz": 10.011051218127074, "p50": 33.686505499645136, "p95": 34.05380649901417, "p99": 34.144052778610785, "sp95": 33.92682675003016, "miss": 579, "n": 600, "clk": null, "gpw": null, "vgpu": 1.6515, "bw": 7.101, "tj": 66.8275, "gl": 0.0}, {"hz": 26.0, "ahz": 26.005260853868766, "p50": 26.644314768418553, "p95": 26.880820972382935, "p99": 27.03128013472451, "sp95": 26.78497095066632, "miss": 0, "n": 1560, "clk": null, "gpw": null, "vgpu": 2.813, "bw": 9.223, "tj": 63.343, "gl": 69.0}, {"hz": 30.0, "ahz": 30.005268639122075, "p50": 22.767292500248004, "p95": 23.0219680670416, "p99": 23.191249888186576, "sp95": 22.9294906503128, "miss": 0, "n": 1800, "clk": null, "gpw": null, "vgpu": 3.199, "bw": 9.702, "tj": 62.843, "gl": 65.0}, {"hz": 100.0, "ahz": 83.60808404764352, "p50": 5891.678490000231, "p95": 11185.062266700515, "p99": 11657.40368864117, "sp95": 12.103385099180741, "miss": 5988, "n": 6000, "clk": null, "gpw": null, "vgpu": 12.7475, "bw": 23.792, "tj": 72.0155, "gl": 87.0}]}, {"set": "field_orin", "label": "trt_fp32", "rep": 3, "order": 5, "id": "9511dce4c02e", "at": "2026-10-03 02:55", "dev": "Jetson Orin NX", "ort": "1.24.0", "trt": "10.7.0", "cudnn": "9.3.0", "cuda": "12.6", "spin": false, "pm": "MAXN_SUPER", "git": null, "bg": [], "tiers": [{"hz": 10.0, "ahz": 10.011068008704962, "p50": 33.576562000234844, "p95": 33.83706675085705, "p99": 33.96514845046113, "sp95": 33.7292952005555, "miss": 535, "n": 600, "clk": null, "gpw": null, "vgpu": 1.651, "bw": 7.193, "tj": 67.093, "gl": 0.0}, {"hz": 26.0, "ahz": 26.005114509086745, "p50": 26.589526654788642, "p95": 26.85418706259952, "p99": 26.96450035824455, "sp95": 26.756777000719012, "miss": 0, "n": 1560, "clk": null, "gpw": null, "vgpu": 2.908, "bw": 9.217, "tj": 63.5155, "gl": 64.5}, {"hz": 30.0, "ahz": 30.005259152294247, "p50": 22.742621999896073, "p95": 22.971527467962005, "p99": 23.121639263226825, "sp95": 22.880595350670774, "miss": 0, "n": 1800, "clk": null, "gpw": null, "vgpu": 3.197, "bw": 9.792, "tj": 63.0, "gl": 60.5}, {"hz": 100.0, "ahz": 84.06404718299179, "p50": 5746.932311000819, "p95": 10805.289462150085, "p99": 11268.35651836096, "sp95": 12.046382999324123, "miss": 5988, "n": 6000, "clk": null, "gpw": null, "vgpu": 12.821, "bw": 23.871, "tj": 72.125, "gl": 87.0}]}], "profiles": {"Rover 720p, spin on": {"name": "Rover 720p, spin on", "stages": {"decode": {"p50": 1.5790082979947329, "p95": 1.7708486411720514}, "preprocess": {"p50": 3.2862615771591663, "p95": 39.984909328632064}, "h2d": {"p50": 0.2952190116047859, "p95": 0.419388758018613}, "inference": {"p50": 1.1223861947655678, "p95": 1.3932249043136835}, "d2h": {"p50": 0.24810712784528732, "p95": 0.29655848629772663}, "postprocess": {"p50": 0.969751039519906, "p95": 1.1989216785877943}}, "total": {"p50": 7.536173332482576, "p95": 44.7481326526031}, "settings": null}, "Rover 720p, spin off": {"name": "Rover 720p, spin off", "stages": {"decode": {"p50": 1.5653015580028296, "p95": 1.6336613800376654}, "preprocess": {"p50": 1.974085345864296, "p95": 2.2299987263977528}, "h2d": {"p50": 0.2580725122243166, "p95": 0.2971117617562413}, "inference": {"p50": 1.1095779482275248, "p95": 1.2237606570124626}, "d2h": {"p50": 0.22889208048582077, "p95": 0.2681093290448189}, "postprocess": {"p50": 0.96160639077425, "p95": 1.031211530789733}}, "total": {"p50": 6.0878898948431015, "p95": 6.583850551396608}, "settings": {"ort_allow_spinning": false, "cv2_threads": 24}}, "Rover 480p, spin on": {"name": "Rover 480p, spin on", "stages": {"decode": {"p50": 0.5620489828288555, "p95": 0.622688140720129}, "preprocess": {"p50": 1.5083912294358015, "p95": 1.9979243166744713}, "h2d": {"p50": 0.2647680230438709, "p95": 0.3329434897750616}, "inference": {"p50": 1.1176364496350288, "p95": 1.3102806638926268}, "d2h": {"p50": 0.22860337048768997, "p95": 0.30183978378772736}, "postprocess": {"p50": 0.9923274628818035, "p95": 1.2971027055755258}}, "total": {"p50": 4.686157219111919, "p95": 5.667069577611984}, "settings": null}, "Busy scene 640, spin on": {"name": "Busy scene 640, spin on", "stages": {"decode": {"p50": 0.448751961812377, "p95": 0.469510885886848}, "preprocess": {"p50": 1.4205682091414928, "p95": 1.6269321786239743}, "h2d": {"p50": 0.24648336693644524, "p95": 0.27813462074846035}, "inference": {"p50": 1.1057013180106878, "p95": 1.2736247852444649}, "d2h": {"p50": 0.22210855968296528, "p95": 0.2558489562943578}, "postprocess": {"p50": 0.975738512352109, "p95": 1.0519483592361212}}, "total": {"p50": 4.408818436786532, "p95": 4.828701633960009}, "settings": null}}, "orinprof": {"stages": {"decode": {"p50": 4.3196564984100405, "p95": 5.1887307985452935}, "preprocess": {"p50": 3.0009859983692877, "p95": 3.486302200326463}, "h2d": {"p50": 1.2272269996174145, "p95": 1.3663088022440206}, "inference": {"p50": 24.82793099989067, "p95": 25.104252999881282}, "d2h": {"p50": 1.19471400466864, "p95": 1.3220837488916004}, "postprocess": {"p50": 9.532719999697292, "p95": 11.676341600104934}}, "total": {"p50": 43.850713998836, "p95": 47.82621654958348}, "fps": 22.920406332477643}, "thorprof": {"stages": {"decode": {"p50": 3.414737497223541, "p95": 3.4432966698659584}, "preprocess": {"p50": 1.6892019775696099, "p95": 1.721533335512504}, "h2d": {"p50": 0.6291765021160245, "p95": 0.6625660200370476}, "inference": {"p50": 5.468551011290401, "p95": 5.6805849832016975}, "d2h": {"p50": 0.25241749244742095, "p95": 0.31590643629897386}, "postprocess": {"p50": 4.4647345202974975, "p95": 4.5051088265609}}, "total": {"p50": 15.898560028290376, "p95": 16.216545531642623}}};
+const $ = s => document.querySelector(s);
+const tip = $('#tip');
+const med = a => { const s=[...a].sort((x,y)=>x-y), m=s.length>>1; return s.length%2?s[m]:(s[m-1]+s[m])/2; };
+const f = (v,d=2) => v==null?'–':v.toFixed(d);
+const DEADLINE = 33.3;
+
+document.addEventListener('pointermove', e => {
+  const t = e.target.closest('[data-tip]');
+  if (!t) { tip.hidden = true; return; }
+  tip.innerHTML = t.dataset.tip; tip.hidden = false;
+  const r = tip.getBoundingClientRect();
+  let x = e.clientX + 14, y = e.clientY + 14;
+  if (x + r.width > innerWidth - 8) x = e.clientX - r.width - 14;
+  if (y + r.height > innerHeight - 8) y = e.clientY - r.height - 14;
+  tip.style.left = x+'px'; tip.style.top = y+'px';
+});
+const esc = s => s.replace(/"/g,'&quot;');
+
+function agg(set, label){
+  const out = {};
+  DATA.runs.filter(r=>r.set===set && r.label===label).forEach(r => r.tiers.forEach(t => {
+    const o = out[t.hz] ??= {p50:[],p95:[],p99:[],sp95:[],ahz:[],clk:[],vgpu:[],bw:[],tj:[],miss:0,n:0};
+    ['p50','p95','p99','sp95','ahz','clk','vgpu','bw','tj'].forEach(k=>{ if(t[k]!=null) o[k].push(t[k]); });
+    o.miss += t.miss; o.n += t.n;
+  }));
+  return out;
+}
+const B = {
+  orin:{trt:agg('field_orin','trt_fp32'),cuda:agg('field_orin','cuda_fp32'),name:'Orin NX',full:'Jetson Orin NX (rover)',c:'--s1'},
+  thor:{trt:agg('bench_thor_nospin','trt_fp32'),cuda:agg('bench_thor_nospin','cuda_fp32'),name:'Thor',full:'Jetson AGX Thor (bench)',c:'--s2'},
+  g:{trt:agg('bench_5090_nospin','trt_fp32'),cuda:agg('bench_5090_nospin','cuda_fp32'),name:'RTX 5090',full:'RTX 5090 (bench)',c:'--s3'},
+};
+const isSat = (hz,o) => med(o.ahz) < 0.95*hz;
+
+// ---------- headline ----------
+const o26 = B.orin.trt[26], op95 = med(o26.p95), margin = DEADLINE-op95;
+const OP=DATA.orinprof;
+$('#headline').innerHTML = `The rover's full perception frame takes <em style="color:var(--bad)">${f(OP.total.p95,1)} ms</em> on its own board. The budget is 33.3 ms.`;
+$('#headline-sub').textContent = `Decode, preprocess, inference and NMS together, p95, on the rover's own camera frames. The model alone takes ${f(op95,1)} ms and fits, which is what an inference-only benchmark would report. At ${f(OP.fps,1)} frames per second the pipeline falls behind a camera delivering 26.`;
+$('#miss-pill').textContent = `Model alone: 0 misses at 26 Hz on all three boards`;
+// ladder: 26 Hz p95 per board against deadline
+(function(){
+  const rows=[B.orin,B.thor,B.g], max=36; // model-only rows, then the Orin's full frame
+  $('#ladder').innerHTML = rows.map(b=>{ const v=med(b.trt[26].p95), lo=Math.min(...b.trt[26].p95), hi=Math.max(...b.trt[26].p95);
+    return `<div class="lrow" data-tip="<b>${b.full}, model only</b><br>26 Hz p95 median ${f(v)} ms<br>range ${f(lo)}–${f(hi)} ms over 3 repeats"><span>${b.name} model</span><div class="ltrack"><div class="lbar" style="width:${v/max*100}%;background:var(${b.c})"></div><div class="ldl" style="left:${DEADLINE/max*100}%"></div></div><span class="num">${f(v,v<10?2:1)} ms</span></div>`;}).join('') +
+    `<div class="lrow" data-tip="<b>Jetson Orin NX, full frame</b><br>p50 ${f(DATA.orinprof.total.p50)} ms, p95 ${f(DATA.orinprof.total.p95)} ms<br>300 rover frames, 640×480"><span><b>Orin frame</b></span><div class="ltrack"><div class="lbar" style="width:${Math.min(DATA.orinprof.total.p95/36,1)*100}%;background:var(--bad)"></div><div class="ldl" style="left:${DEADLINE/36*100}%"></div></div><span class="num">${f(DATA.orinprof.total.p95,1)} ms</span></div>` +
+    `<div class="lrow lcap"><span></span><div class="ltrack bare"><span style="left:${DEADLINE/max*100}%">33.3 ms deadline</span></div><span></span></div>`;
+})();
+const swing = (Math.max(...o26.p95)/Math.min(...o26.p95)-1)*100;
+const tiles = [
+  {v:f(DATA.orinprof.total.p95-DEADLINE,1),u:'ms',l:'Over budget, full frame p95',n:`${f(DATA.orinprof.total.p95,1)} ms against 33.3 ms`},
+  {v:f(op95,1),u:'ms',l:'Model alone, 26 Hz sweep p95',n:`fits, range ${f(Math.min(...o26.p95),1)}–${f(Math.max(...o26.p95),1)} over 3 repeats`},
+  {v:f(med(o26.bw),1),u:'W',l:'Orin board power at 26 Hz',n:'budget 15 W'},
+  {v:f(OP.fps,1),u:'fps',l:'What the pipeline sustains',n:'against a camera delivering 26'},
+];
+$('#tiles').innerHTML = tiles.map(t=>`<div class="tile"><span class="v">${t.v}<small>${t.u}</small></span><span class="l">${t.l}</span><span class="n">${t.n}</span></div>`).join('');
+
+// ---------- helpers ----------
+const HZ = [10,26,30,100];
+function xlog(W,L,R){ const a=Math.log10(8), b=Math.log10(125); return hz => L + (Math.log10(hz)-a)/(b-a)*(W-L-R); }
+
+// ---------- rate chart ----------
+const SER = [];
+['orin','thor','g'].forEach(k=>{ SER.push({b:k,v:'trt',name:`${B[k].name} · TensorRT`,dash:''}); SER.push({b:k,v:'cuda',name:`${B[k].name} · CUDA EP`,dash:'5 4'}); });
+$('#rate-legend').innerHTML = ['orin','thor','g'].map(k=>`<span><svg width="12" height="12" aria-hidden="true"><circle cx="6" cy="6" r="5" fill="var(${B[k].c})"/></svg>${B[k].full}</span>`).join('') +
+  `<span><svg width="26" height="10" aria-hidden="true"><line x1="1" y1="5" x2="25" y2="5" stroke="var(--ink-2)" stroke-width="2"/></svg>TensorRT</span>` +
+  `<span><svg width="26" height="10" aria-hidden="true"><line x1="1" y1="5" x2="25" y2="5" stroke="var(--ink-2)" stroke-width="2" stroke-dasharray="5 4"/></svg>CUDA EP</span>` +
+  `<span><svg width="12" height="12" aria-hidden="true"><path d="M6 1 11 10H1Z" fill="none" stroke="var(--ink-2)" stroke-width="1.5"/></svg>saturated, off scale</span>`;
+
+function drawRate(p){
+  const W=900,H=420,L=58,R=24,T=30,B_=42, X=xlog(W,L,R);
+  const ymin=1, ymax=100, ly=v=>Math.log10(v), Y=v=>T+(1-(ly(Math.min(Math.max(v,ymin),ymax))-ly(ymin))/(ly(ymax)-ly(ymin)))*(H-T-B_);
+  let g='';
+  [1,2,5,10,20,50,100].forEach(v=>g+=`<line x1="${L}" x2="${W-R}" y1="${Y(v)}" y2="${Y(v)}" stroke="var(--grid)"/><text x="${L-8}" y="${Y(v)+4}" text-anchor="end">${v}</text>`);
+  g+=`<rect x="${X(24.8)}" y="${T}" width="${X(27.2)-X(24.8)}" height="${H-T-B_}" fill="var(--accent)" opacity=".1"/>`;
+  g+=`<text x="${X(26)}" y="${T-8}" text-anchor="middle" class="lab">rover 26 Hz</text>`;
+  g+=`<line x1="${X(30)}" x2="${X(30)}" y1="${T}" y2="${H-B_}" stroke="var(--ink-3)" stroke-dasharray="2 3"/>`;
+  g+=`<text x="${X(30)+5}" y="${T-8}" class="lab">camera spec</text>`;
+  g+=`<line x1="${L}" x2="${W-R}" y1="${Y(DEADLINE)}" y2="${Y(DEADLINE)}" stroke="var(--warn)" stroke-width="1.5" stroke-dasharray="6 4"/>`;
+  g+=`<text x="${W-R}" y="${Y(DEADLINE)-6}" text-anchor="end" style="fill:var(--warn)">33.3 ms deadline</text>`;
+  HZ.forEach(h=>g+=`<text x="${X(h)}" y="${H-B_+18}" text-anchor="middle" class="lab">${h} Hz</text>`);
+  g+=`<text x="${(W+L)/2}" y="${H-4}" text-anchor="middle">request rate (log scale)</text>`;
+  g+=`<text x="14" y="${(H-B_+T)/2}" transform="rotate(-90 14 ${(H-B_+T)/2})" text-anchor="middle">response ${p}, ms (log)</text>`;
+  SER.forEach(s=>{
+    const src=B[s.b][s.v], c=B[s.b].c;
+    const pts=Object.keys(src).map(Number).sort((a,b)=>a-b).map(h=>({h,o:src[h]}));
+    const live=pts.filter(q=>!isSat(q.h,q.o));
+    g+=`<path d="${live.map((q,i)=>(i?'L':'M')+X(q.h)+' '+Y(med(q.o[p]))).join(' ')}" fill="none" stroke="var(${c})" stroke-width="2" stroke-dasharray="${s.dash}"/>`;
+    pts.forEach(q=>{
+      const m=med(q.o[p]), lo=Math.min(...q.o[p]), hi=Math.max(...q.o[p]), x=X(q.h);
+      if(isSat(q.h,q.o)){
+        const tt=`<b>${B[s.b].full} · ${s.v==='trt'?'TensorRT':'CUDA EP'}</b><br>${q.h} Hz requested, ${f(med(q.o.ahz),1)} Hz sustained<br>queue grew for the whole tier: ${p} ${(m/1000).toFixed(1)} s<br>service p95 ${f(med(q.o.sp95),1)} ms`;
+        g+=`<path d="M${x} ${T+2} l6 10 h-12 Z" fill="${s.v==='trt'?`var(${c})`:'var(--plate)'}" stroke="var(${c})" stroke-width="1.5"/>`;
+        g+=`<circle cx="${x}" cy="${T+8}" r="13" fill="transparent" data-tip="${esc(tt)}"/>`;
+        return;
+      }
+      const tt=`<b>${B[s.b].full} · ${s.v==='trt'?'TensorRT':'CUDA EP'}</b><br>${q.h} Hz · ${p} median ${f(m)} ms<br>range ${f(lo)}–${f(hi)} ms (${q.o[p].length} repeats)<br>misses ${q.o.miss.toLocaleString()} / ${q.o.n.toLocaleString()} frames`;
+      g+=`<line x1="${x}" x2="${x}" y1="${Y(lo)}" y2="${Y(hi)}" stroke="var(${c})" stroke-width="1.5" opacity=".7"/>`;
+      g+=`<circle cx="${x}" cy="${Y(m)}" r="4.5" fill="${s.v==='trt'?`var(${c})`:'var(--plate)'}" stroke="${s.v==='trt'?'var(--plate)':`var(${c})`}" stroke-width="2"/>`;
+      g+=`<circle cx="${x}" cy="${Y(m)}" r="12" fill="transparent" data-tip="${esc(tt)}"/>`;
+    });
+  });
+  // direct labels at 26 Hz for TensorRT
+  ['orin','thor','g'].forEach(k=>{ const m=med(B[k].trt[26][p]); g+=`<text x="${X(26)-10}" y="${Y(m)+4}" text-anchor="end" class="strong">${f(m,m<10?2:1)}</text>`; });
+  $('#rate-chart').innerHTML=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Response ${p} latency against request rate for three boards and two providers">${g}</svg>`;
+}
+drawRate('p95');
+document.querySelectorAll('#pct button').forEach(b=>b.addEventListener('click',()=>{
+  document.querySelectorAll('#pct button').forEach(x=>x.setAttribute('aria-pressed',x===b)); drawRate(b.dataset.p);
+}));
+const o10=B.orin.trt[10];
+const tt=med(B.thor.trt[26].p95)/med(B.thor.trt[100].p95);
+const gain=k=>med(B[k].cuda[26].p95)/med(B[k].trt[26].p95);
+$('#rate-take').innerHTML=[
+  {k:`${o10.miss.toLocaleString()} / ${o10.n.toLocaleString()}`,t:`Orin frames late at 10 Hz, against none at 26 Hz. Fewer frames let the GPU clock down, and each frame then takes ${f(med(o10.sp95),1)} ms. Running perception slower to save work would make every frame later.`},
+  {k:`${tt.toFixed(1)}×`,t:`Thor TensorRT p95 at 26 Hz against 100 Hz, same model and board. A benchmark run flat out reports a number the rover never sees.`},
+  {k:`${gain('g').toFixed(2)} / ${gain('thor').toFixed(2)} / ${gain('orin').toFixed(2)}×`,t:'TensorRT over the CUDA provider at 26 Hz on the 5090, Thor and Orin. The gain shrinks to almost nothing on the rover\'s board.'},
+].map(x=>`<div><span class="k">${x.k}</span><p>${x.t}</p></div>`).join('');
+
+// ---------- small multiples ----------
+function small(el, src, key, color, unit, d, skipSat){
+  const W=320,H=210,L=44,R=14,T=22,B_=30,X=xlog(W,L,R);
+  const pts=Object.keys(src).map(Number).sort((a,b)=>a-b).filter(h=>src[h][key].length).map(h=>({h,v:med(src[h][key]),s:isSat(h,src[h])}));
+  const vs=pts.map(q=>q.v), lo=Math.min(...vs), hi=Math.max(...vs), pad=(hi-lo)*.25||1;
+  const a=lo-pad, b=hi+pad, Y=v=>T+(1-(v-a)/(b-a))*(H-T-B_);
+  let g='';
+  [a+(b-a)*.15,(a+b)/2,b-(b-a)*.15].forEach(v=>g+=`<line x1="${L}" x2="${W-R}" y1="${Y(v)}" y2="${Y(v)}" stroke="var(--grid)"/><text x="${L-6}" y="${Y(v)+4}" text-anchor="end">${v.toFixed(d)}</text>`);
+  pts.forEach(q=>g+=`<text x="${X(q.h)}" y="${H-B_+18}" text-anchor="middle" class="lab">${q.h}</text>`);
+  g+=`<path d="${pts.map((q,i)=>(i?'L':'M')+X(q.h)+' '+Y(q.v)).join(' ')}" fill="none" stroke="var(${color})" stroke-width="2"/>`;
+  pts.forEach((q,i)=>{ g+=`<circle cx="${X(q.h)}" cy="${Y(q.v)}" r="4.5" fill="${q.s?'var(--plate)':`var(${color})`}" stroke="${q.s?`var(${color})`:'var(--plate)'}" stroke-width="2"/>`;
+    if(i===0||i===pts.length-1) g+=`<text x="${X(q.h)+(i?-8:8)}" y="${Y(q.v)-10}" text-anchor="${i?'end':'start'}" class="strong">${q.v.toFixed(d)}</text>`;
+    g+=`<circle cx="${X(q.h)}" cy="${Y(q.v)}" r="12" fill="transparent" data-tip="${q.h} Hz · ${q.v.toFixed(d)} ${unit}${q.s?'<br>saturated tier':''}"/>`; });
+  $(el).innerHTML=`<svg viewBox="0 0 ${W} ${H}" role="img">${g}</svg>`;
+}
+small('#m1', B.g.trt, 'clk', '--s3', 'MHz', 0);
+small('#m2', B.thor.trt, 'vgpu', '--s2', 'W', 1);
+small('#m3', B.orin.trt, 'vgpu', '--s1', 'W', 1);
+
+// ---------- thermal ----------
+(function(){
+  const reps=DATA.runs.filter(r=>r.set==='field_orin'&&r.label==='trt_fp32').sort((a,b)=>a.order-b.order)
+    .map(r=>{const t=r.tiers.find(t=>t.hz===26);return {rep:r.rep,order:r.order,p95:t.p95,tj:t.tj,gl:t.gl,id:r.id};});
+  const W=560,H=230,L=48,R=20,T=24,B_=40, n=reps.length;
+  const X=i=>L+(i+.5)*(W-L-R)/n, Y=v=>T+(1-(v-20)/(30-20))*(H-T-B_);
+  let g='';
+  [20,22,24,26,28,30].forEach(v=>g+=`<line x1="${L}" x2="${W-R}" y1="${Y(v)}" y2="${Y(v)}" stroke="var(--grid)"/><text x="${L-8}" y="${Y(v)+4}" text-anchor="end">${v}</text>`);
+  g+=`<text x="12" y="${(H-B_+T)/2}" transform="rotate(-90 12 ${(H-B_+T)/2})" text-anchor="middle">p95, ms</text>`;
+  const bw=56;
+  reps.forEach((r,i)=>{
+    const x=X(i);
+    g+=`<rect x="${x-bw/2}" y="${Y(r.p95)}" width="${bw}" height="${Y(20)-Y(r.p95)}" rx="4" fill="var(--s1)" opacity="${i?1:.55}" data-tip="<b>Repeat ${r.rep}</b> (run ${r.order} of 6)<br>26 Hz p95 ${f(r.p95)} ms<br>run ${r.id}"/>`;
+    g+=`<text x="${x}" y="${Y(r.p95)-8}" text-anchor="middle" class="strong">${f(r.p95,1)} ms</text>`;
+    g+=`<text x="${x}" y="${H-B_+16}" text-anchor="middle" class="lab">repeat ${r.rep}</text>`;
+  });
+  $('#therm').innerHTML=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Orin 26 Hz p95 for each of the three phase 1 repeats">${g}</svg>`;
+})();
+
+// ---------- stage breakdown ----------
+const STAGES=[['decode','Decode','--s4'],['preprocess','Preprocess','--s2'],['h2d','H2D copy','--s5'],['inference','Inference','--s1'],['d2h','D2H copy','--s6'],['postprocess','Postprocess','--s3']];
+$('#stage-legend').innerHTML=STAGES.map(s=>`<span><svg width="12" height="12" aria-hidden="true"><rect width="12" height="12" rx="2" fill="var(${s[2]})"/></svg>${s[1]}</span>`).join('');
+(function(){
+  const rows=Object.entries(DATA.profiles), W=900, L=170, R=70, rh=34, gap=16, T=6;
+  const H=T+rows.length*(rh+gap)+24;
+  const max=Math.max(...rows.map(([,p])=>STAGES.reduce((a,s)=>a+p.stages[s[0]].p50,0)));
+  const top=Math.ceil(max), X=v=>L+v/top*(W-L-R);
+  let g='';
+  for(let v=0;v<=top;v++) g+=`<line x1="${X(v)}" x2="${X(v)}" y1="${T}" y2="${H-24}" stroke="var(--grid)"/><text x="${X(v)}" y="${H-8}" text-anchor="middle">${v} ms</text>`;
+  rows.forEach(([name,p],i)=>{
+    const y=T+i*(rh+gap); let x=0; const sum=STAGES.reduce((a,s)=>a+p.stages[s[0]].p50,0);
+    g+=`<text x="${L-12}" y="${y+rh/2+4}" text-anchor="end" class="lab">${name}</text>`;
+    STAGES.forEach(([k,lab,c])=>{
+      const v=p.stages[k].p50, w=Math.max(X(x+v)-X(x)-2,1);
+      g+=`<rect x="${X(x)}" y="${y}" width="${w}" height="${rh}" rx="2" fill="var(${c})" data-tip="<b>${name}</b><br>${lab}: p50 ${f(v)} ms, p95 ${f(p.stages[k].p95)} ms<br>${(v/sum*100).toFixed(0)}% of the frame"/>`;
+      if(k==='inference') g+=`<text x="${X(x)+w/2}" y="${y+rh/2+4}" text-anchor="middle" style="fill:#fff;font-weight:500">${(v/sum*100).toFixed(0)}%</text>`;
+      x+=v;
+    });
+    g+=`<text x="${X(sum)+8}" y="${y+rh/2+4}" class="strong">${f(sum,1)} ms</text>`;
+  });
+  $('#stage-chart').innerHTML=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Per-stage median time per frame for four frame sets">${g}</svg>`;
+})();
+(function(){
+  const on=DATA.profiles['Rover 720p, spin on'], off=DATA.profiles['Rover 720p, spin off'];
+  const items=[['Preprocess p95',on.stages.preprocess.p95,off.stages.preprocess.p95],['Frame p95',on.total.p95,off.total.p95]];
+  const mx=Math.max(...items.map(i=>i[1]));
+  $('#spin-bars').innerHTML=items.map(([n,a,b])=>`<div class="hrow"><span>${n}</span><div class="hbar" style="width:${a/mx*100}%" data-tip="spin on: ${f(a,1)} ms"></div><span class="num">${f(a,1)} ms</span></div>
+  <div class="hrow"><span></span><div class="hbar off" style="width:${Math.max(b/mx*100,1)}%" data-tip="spin off: ${f(b,1)} ms"></div><span class="num">${f(b,1)} ms</span></div>`).join('')+
+  `<div class="legend"><span><svg width="12" height="12" aria-hidden="true"><rect width="12" height="12" rx="2" fill="var(--s2)"/></svg>spin on</span><span><svg width="12" height="12" aria-hidden="true"><rect width="12" height="12" rx="2" fill="var(--s1)"/></svg>spin off</span></div>`;
+})();
+
+// ---------- provenance ----------
+const BASE=new Set(['bench_5090_nospin','bench_thor_nospin','field_orin']);
+const SETS={base:'Baselines',all:'All runs',field_orin:'Orin',bench_thor_nospin:'Thor',bench_5090_nospin:'5090'};
+const SETNAME={field_orin:'Orin baseline',bench_thor_nospin:'Thor baseline',bench_5090_nospin:'5090 baseline',bench_5090:'5090 first, spin on',bench_5090_rerun:'5090 four-tier, spin on',bench_thor:'Thor first, vLLM resident',bench_thor_4tier_spin:'Thor clean, spin on',bench_thor_rerun_stopped:'Thor stopped re-run'};
+$('#setf').innerHTML=Object.entries(SETS).map(([k,v],i)=>`<button aria-pressed="${i===0}" data-s="${k}">${v}</button>`).join('');
+function prov(set){
+  const order=['field_orin','bench_thor_nospin','bench_5090_nospin','bench_thor_4tier_spin','bench_5090_rerun','bench_5090','bench_thor','bench_thor_rerun_stopped'];
+  const rows=DATA.runs.filter(r=>set==='all'||(set==='base'?BASE.has(r.set):r.set===set)).sort((a,b)=>order.indexOf(a.set)-order.indexOf(b.set)||(a.order-b.order));
+  $('#prov').innerHTML=`<thead><tr><th>Run</th><th>Status</th><th>Set</th><th>Device</th><th>Variant</th><th>Rep</th><th>26 Hz p95</th><th>ORT</th><th>TRT</th><th>cuDNN</th><th>CUDA</th><th>Spin</th><th>Power mode</th><th>Commit</th><th>Also running</th><th>Started (UTC)</th></tr></thead><tbody>`+
+  rows.map(r=>{ const t=r.tiers.find(t=>t.hz===26); const b=BASE.has(r.set);
+    return `<tr class="${b?'':'flag'}"><td class="num">${r.id}</td><td>${b?'baseline':'reference'}</td><td>${SETNAME[r.set]||r.set}</td><td>${r.dev}</td><td>${r.label}</td><td class="num">${r.rep}</td><td class="num">${t?f(t.p95)+' ms':'–'}</td><td>${r.ort}</td><td>${r.trt}</td><td>${r.cudnn}</td><td>${r.cuda}</td><td>${r.spin?'on':'off'}</td><td>${r.pm||'n/a'}</td><td class="num">${r.git||'–'}</td><td>${r.bg.join(', ')||'none'}</td><td class="num">${r.at}</td></tr>`;}).join('')+'</tbody>';
+}
+prov('base');
+document.querySelectorAll('#setf button').forEach(b=>b.addEventListener('click',()=>{
+  document.querySelectorAll('#setf button').forEach(x=>x.setAttribute('aria-pressed',x===b)); prov(b.dataset.s);
+}));
+
+// ---------- Orin vs 5090, same frames ----------
+(function(){
+  const rows=[['Jetson Orin NX (rover)',DATA.orinprof],['Jetson AGX Thor',DATA.thorprof],['RTX 5090',DATA.profiles['Rover 480p, spin on']]];
+  const W=900,L=180,R=150,rh=40,gap=22,T=26, H=T+rows.length*(rh+gap)+24;
+  const top=50, X=v=>L+v/top*(W-L-R);
+  let g='';
+  for(let v=0;v<=top;v+=10) g+=`<line x1="${X(v)}" x2="${X(v)}" y1="${T}" y2="${H-24}" stroke="var(--grid)"/><text x="${X(v)}" y="${H-8}" text-anchor="middle">${v} ms</text>`;
+  g+=`<line x1="${X(DEADLINE)}" x2="${X(DEADLINE)}" y1="${T-6}" y2="${H-24}" stroke="var(--warn)" stroke-width="1.5" stroke-dasharray="6 4"/><text x="${X(DEADLINE)}" y="${T-12}" text-anchor="middle" style="fill:var(--warn)">33.3 ms deadline</text>`;
+  rows.forEach(([name,p],i)=>{
+    const y=T+i*(rh+gap); let x=0; const sum=STAGES.reduce((a,s)=>a+p.stages[s[0]].p50,0);
+    g+=`<text x="${L-12}" y="${y+rh/2+4}" text-anchor="end" class="lab">${name}</text>`;
+    STAGES.forEach(([k,lab,c])=>{
+      const v=p.stages[k].p50, w=Math.max(X(x+v)-X(x)-2,1);
+      g+=`<rect x="${X(x)}" y="${y}" width="${w}" height="${rh}" rx="2" fill="var(${c})" data-tip="<b>${name}</b><br>${lab}: p50 ${f(v)} ms, p95 ${f(p.stages[k].p95)} ms<br>${(v/sum*100).toFixed(0)}% of the frame"/>`;
+      if(w>44) g+=`<text x="${X(x)+w/2}" y="${y+rh/2+4}" text-anchor="middle" style="fill:#fff;font-weight:500">${f(v,1)}</text>`;
+      x+=v;
+    });
+    g+=`<text x="${X(sum)+8}" y="${y+rh/2+4}" class="strong">${f(sum,1)} ms p50 · ${f(p.total.p95,1)} p95</text>`;
+  });
+  $('#stage-legend2').innerHTML=$('#stage-legend').innerHTML;
+  $('#cmp-chart').innerHTML=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Per-stage time per frame on the Orin, the Thor and the 5090, same frames, one scale">${g}</svg>`;
+  const o=DATA.orinprof.stages;
+  $('#cmp-take').innerHTML=[
+    {k:`${f(o.postprocess.p50,1)} ms`,t:`NMS on the Orin's CPU, ten times the 5090, for frames with no detections at all. It sorts all 8,400 candidates every frame.`},
+    {k:`${f(o.inference.p50,1)} ms`,t:'Inference inside the frame, against 22.8 ms in the sweep and 16.8 ms back to back. The GPU clocks down while the host works, so a tight-loop benchmark understates it by a third.'},
+    {k:`${f(o.h2d.p50+o.d2h.p50,1)} ms`,t:'Spent copying between CPU and GPU memory on a board where both share the same memory. Writing straight into it removes this cost.'},
+  ].map(x=>`<div><span class="k">${x.k}</span><p>${x.t}</p></div>`).join('');
+})();
+
+</script>
+
+</body>
+</html>
