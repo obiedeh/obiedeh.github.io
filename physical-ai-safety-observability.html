@@ -318,7 +318,7 @@
       <section class="case-hero shell" id="top">
         <div class="eyebrow"><span></span> Runtime safety · Jetson AGX Thor · Vision-language models</div>
         <h1>A safety layer that <em>measures itself</em> before it judges a robot.</h1>
-        <p class="lead">Structured safety events, a policy engine for PPE, zones and proximity, and an operator review API. Measured on Jetson AGX Thor for what it costs to run, then pushed through a real vision-language model to find out what it gets wrong.</p>
+        <p class="lead">Structured safety events, a policy engine for PPE, zones and proximity, and an operator console to review them. Measured on Jetson AGX Thor for what it costs to run, then pushed through a real vision-language model to find out what it gets wrong. Status: functional, with live-camera validation in progress.</p>
         <div class="case-meta" aria-label="Case study summary">
           <div>
             <span>Hardware</span>
@@ -326,7 +326,7 @@
           </div>
           <div>
             <span>Dates</span>
-            <strong>2026-09-09 measurements, ten run artifacts</strong>
+            <strong>2026-09-09 runtime and model runs; 2026-10-02 constrained-mode guard probe</strong>
           </div>
           <div>
             <span>Scope</span>
@@ -340,7 +340,7 @@
           <div class="section-kicker">// PIPELINE</div>
           <div class="case-copy">
             <h2>Frames in, reviewable events out.</h2>
-            <p>An edge worker samples frames from a source, asks a model adapter for detections, evaluates them against the safety policy, and posts structured safety events to a FastAPI backend with an operator review queue. Every event carries the rule, severity, confidence, a human-review flag and its evidence.</p>
+            <p>Capture, inference and posting run as three independent loops. A capture thread per camera decodes at the camera's native rate and streams video to the console. An inference worker samples the latest frame on its own interval, asks a model adapter for detections and evaluates them against the safety policy. An asynchronous poster sends the resulting safety events to a FastAPI backend with an operator review queue. Every event carries the rule, severity, confidence, a human-review flag and its evidence.</p>
             <p>The adapter boundary is the point of the design. A deterministic mock adapter measures the pipeline alone. An OpenAI-compatible adapter puts a real vision-language model behind the same interface, so the same run artifact records both the runtime cost and what the model returned.</p>
             <p>Every run writes one JSON artifact with device provenance, per-frame timings, token usage, event and detection counts, peak memory and a 1 Hz tegrastats summary. Nothing on this page is typed by hand.</p>
           </div>
@@ -354,7 +354,10 @@
             <h2>What was built.</h2>
             <ul>
               <li>Safety event schema and policy engine: PPE missing, zone intrusion, human-robot proximity, with severity, confidence gating and human-review flags.</li>
-              <li>Edge worker with mock, OpenAI-compatible and Cosmos-Reason2 adapters; batched event posting; run reports with provenance.</li>
+              <li>Edge worker with mock, OpenAI-compatible and Cosmos-Reason2 adapters; an asynchronous event poster with a bounded queue, retries and a drop counter; run reports with provenance.</li>
+              <li>Operator console served by the API: Live, Cameras, Model, Runs and Events. Cameras, restricted zones, rules, model endpoint and inference cadence are set in the UI and applied without a restart.</li>
+              <li>Camera setup for ten vendor profiles with a connection test that decodes one frame or names the failure. Passwords are encrypted at rest, never returned by the API, and masked in logs, events and run reports.</li>
+              <li>A constrained-mode guard that refuses a JSON schema the model server would ignore, proven by a live canary request before any worker uses it.</li>
               <li>FastAPI backend with SQLite store, single and batch event endpoints, operator review, and Alembic migrations.</li>
               <li>Run recorder and tegrastats sampler that turn each run into a committed artifact; an evidence page generated from those artifacts.</li>
             </ul>
@@ -367,7 +370,7 @@
           <div class="section-kicker">// THOR EVIDENCE</div>
           <div class="case-copy">
             <h2>The pipeline keeps camera rate; the backend does not.</h2>
-            <p>With the mock adapter at 30 fps pacing, the worker sustained 28.588 frames/s over 1800 frames with rule evaluation at 0.9877 ms p95 and board power at the idle level, 24,604 mW p50 (`reports/thor/mock_30fps_no_post.json`). Posting each event to the backend synchronously dropped throughput to 4.357 frames/s at 160.9 ms per frame; batching a frame's events into one request lifted it to 7.075 frames/s at 68.2 ms (`mock_30fps_backend.json`, `mock_30fps_backend_batched.json`).</p>
+            <p>With the mock adapter at 30 fps pacing, the worker sustained 28.588 frames/s over 1800 frames with rule evaluation at 0.9877 ms p95 and board power at the idle level, 24,604 mW p50 (`reports/thor/mock_30fps_no_post.json`). Posting each event to the backend synchronously dropped throughput to 4.357 frames/s at 160.9 ms per frame; batching a frame's events into one request lifted it to 7.075 frames/s at 68.2 ms (`mock_30fps_backend.json`, `mock_30fps_backend_batched.json`). Posting has since moved to an asynchronous poster off the capture and inference threads; its effect on the Thor is not measured yet, so these synchronous figures remain the committed numbers.</p>
             <p>Cosmos-Reason2-2B served by vLLM on the same device cost 4.35 s p50 and 12.85 s p95 per frame with its reasoning block, at 66.6 W board power (`cosmos2b_video_60.json`). Reasoning length drove the tail: the slowest frames produced near 1000 completion tokens at about 61 tokens/s.</p>
             <div class="metric-band" aria-label="Thor safety runtime highlights">
               <div>
@@ -442,6 +445,45 @@
 
       <section class="case-section shell">
         <div class="case-grid">
+          <div class="section-kicker">// GUARD</div>
+          <div class="case-copy">
+            <h2>The config now refuses a schema the server would ignore.</h2>
+            <p>The vLLM finding above is now enforced in code instead of documented. Saving constrained mode against a server started with a reasoning parser is refused, and before any worker uses constrained mode a canary request must prove the server honours the schema. The canary asks for one word while the schema allows only a different one.</p>
+            <p>On 2026-10-02 a probe drove the application on the Thor against the real vLLM 0.14 containers (`reports/thor/constrained_guard_probe.json`). The reasoning-parser server answered the canary with `banana`, a value the schema forbids, and the guard refused constrained mode. The container without the parser returned the schema value and was allowed.</p>
+            <div class="metric-band" aria-label="Constrained-mode guard probe results">
+              <div>
+                <strong>HTTP 422</strong>
+                <span>Constrained mode refused at container start and at save, reasoning parser on</span>
+              </div>
+              <div>
+                <strong>"banana"</strong>
+                <span>Reasoning-parser server's canary answer; guard refused</span>
+              </div>
+              <div>
+                <strong>Schema honoured</strong>
+                <span>No-reasoning container; constrained mode allowed</span>
+              </div>
+              <div>
+                <strong>55.6 s</strong>
+                <span>Container ready after launch from the console</span>
+              </div>
+            </div>
+            <div class="chart-grid">
+              <figure class="chart-panel">
+                <img src="/assets/evidence/safety-console-model.webp" alt="Model page of the operator console: host memory, model server state and a catalog of Cosmos-Reason2 containers, with the reasoning-parser container marked as not supporting constrained mode." loading="lazy">
+                <figcaption>Model page. The catalog marks the reasoning-parser container as think mode only and checks memory before anything starts. Captured from the running console on a machine without the model weights, so every container shows weights missing.</figcaption>
+              </figure>
+              <figure class="chart-panel">
+                <img src="/assets/evidence/safety-console-live.webp" alt="Live page of the operator console: a synthetic workcell feed with person, robot and pallet boxes, a dashed restricted zone, and a column of PPE and proximity events marked review required." loading="lazy">
+                <figcaption>Live page with the built-in synthetic feed and the mock detector, both labelled on screen. Video keeps playing on its own loop; events land in the review column as they post.</figcaption>
+              </figure>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="case-section shell">
+        <div class="case-grid">
           <div class="section-kicker">// CORRECTIONS</div>
           <div class="case-copy">
             <h2>What went wrong and what was corrected.</h2>
@@ -458,12 +500,12 @@
             <h2>What is not established.</h2>
             <ul>
               <li>No precision or recall for any rule. There is no labelled ground truth, so the false events above are counted, not rated.</li>
-              <li>No real camera input; the footage is an Isaac Sim recording with no people in it.</li>
+              <li>No committed live-camera run; the model footage is an Isaac Sim recording with no people in it.</li>
               <li>Runs are 60 to 390 seconds, not sustained operation.</li>
-              <li>No operator dashboard; review is through the API.</li>
+              <li>The asynchronous poster's effect on throughput and packet-to-event latency is not measured on the Thor.</li>
               <li>Zone geometry is configured, not derived from calibration.</li>
             </ul>
-            <p>Next work is authored simulation scenes with known PPE and zone states so both model sizes get a precision and recall, asynchronous event posting, and a live camera source.</p>
+            <p>Next work is a live-camera evidence run on the Thor in the existing run-report format, Cosmos-Reason2-8B on live video, and authored simulation scenes with known PPE and zone states so both model sizes get a precision and recall, labelled simulation.</p>
           </div>
         </div>
       </section>
@@ -489,7 +531,7 @@
           <div class="case-copy">
             <h2>Sources and links.</h2>
             <div class="source-list case-copy">
-              <p>Raw records: <a href="https://github.com/obiedeh/physical-ai-safety-observability/blob/main/reports/thor/mock_30fps_no_post.json">mock_30fps_no_post.json</a>, <a href="https://github.com/obiedeh/physical-ai-safety-observability/blob/main/reports/thor/mock_30fps_backend.json">mock_30fps_backend.json</a>, <a href="https://github.com/obiedeh/physical-ai-safety-observability/blob/main/reports/thor/mock_30fps_backend_batched.json">mock_30fps_backend_batched.json</a>, <a href="https://github.com/obiedeh/physical-ai-safety-observability/blob/main/reports/thor/cosmos2b_video_60.json">cosmos2b_video_60.json</a>, <a href="https://github.com/obiedeh/physical-ai-safety-observability/blob/main/reports/thor/cosmos2b_video_60_nothink.json">cosmos2b_video_60_nothink.json</a>, <a href="https://github.com/obiedeh/physical-ai-safety-observability/blob/main/reports/thor/cosmos2b_video_60_schema.json">cosmos2b_video_60_schema.json</a>, <a href="https://github.com/obiedeh/physical-ai-safety-observability/blob/main/reports/thor/cosmos8b_video_60_schema.json">cosmos8b_video_60_schema.json</a>, <a href="https://github.com/obiedeh/physical-ai-safety-observability/blob/main/reports/thor/cosmos8b_video_60_nothink.json">cosmos8b_video_60_nothink.json</a>. Each has a `_tegrastats.jsonl` sidecar and a run log beside it.</p>
+              <p>Raw records: <a href="https://github.com/obiedeh/physical-ai-safety-observability/blob/main/reports/thor/mock_30fps_no_post.json">mock_30fps_no_post.json</a>, <a href="https://github.com/obiedeh/physical-ai-safety-observability/blob/main/reports/thor/mock_30fps_backend.json">mock_30fps_backend.json</a>, <a href="https://github.com/obiedeh/physical-ai-safety-observability/blob/main/reports/thor/mock_30fps_backend_batched.json">mock_30fps_backend_batched.json</a>, <a href="https://github.com/obiedeh/physical-ai-safety-observability/blob/main/reports/thor/cosmos2b_video_60.json">cosmos2b_video_60.json</a>, <a href="https://github.com/obiedeh/physical-ai-safety-observability/blob/main/reports/thor/cosmos2b_video_60_nothink.json">cosmos2b_video_60_nothink.json</a>, <a href="https://github.com/obiedeh/physical-ai-safety-observability/blob/main/reports/thor/cosmos2b_video_60_schema.json">cosmos2b_video_60_schema.json</a>, <a href="https://github.com/obiedeh/physical-ai-safety-observability/blob/main/reports/thor/cosmos8b_video_60_schema.json">cosmos8b_video_60_schema.json</a>, <a href="https://github.com/obiedeh/physical-ai-safety-observability/blob/main/reports/thor/cosmos8b_video_60_nothink.json">cosmos8b_video_60_nothink.json</a>, <a href="https://github.com/obiedeh/physical-ai-safety-observability/blob/main/reports/thor/constrained_guard_probe.json">constrained_guard_probe.json</a>. Each model run has a `_tegrastats.jsonl` sidecar and a run log beside it.</p>
             </div>
             <div class="evidence-links">
               <a href="https://github.com/obiedeh/physical-ai-safety-observability">Safety observability repository ↗</a>
