@@ -137,7 +137,7 @@ tr.flag td{color:var(--warn)}
 .thermal .chart svg{min-width:320px}
 .corr{display:flex;flex-direction:column;gap:10px;align-items:flex-start}
 .wrapseg{flex-wrap:wrap}
-h1.brand{font-size:clamp(44px,8vw,84px);font-stretch:85%;font-weight:800;letter-spacing:-.02em}
+h1.brand{font-family:"Helvetica Neue",Helvetica,Arial,sans-serif;font-size:clamp(35px,3.25vw,47.5px);font-stretch:normal;font-weight:500;letter-spacing:-.04em;line-height:1.08;max-width:1000px;margin:18px 0 22px}h1.brand em{font-style:normal;color:var(--accent)}h1.brand em.b{color:var(--s1)}
 .lede{font-size:18px;max-width:64ch}
 .lede b{color:var(--ink);font-weight:600}
 .spec{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));border-top:2px solid var(--ink);border-bottom:1px solid var(--rule)}
@@ -202,10 +202,10 @@ body{margin:0}
 <div class="wrap">
 <header>
   <div class="toprow">
-    <span class="eyebrow">Model benchmarking · measured on the robot</span>
+    <span class="eyebrow">Bench2Field · Model benchmarking measured on the robot</span>
     <span class="pill good"><svg viewBox="0 0 12 12" aria-hidden="true"><path d="M2 6.5 5 9l5-6" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>v1.0.1 released · phase 2 under way</span>
   </div>
-  <h1 class="brand">Bench2Field</h1>
+  <h1 class="brand">The <em class="b">benchmark</em> said GO. The robot would <em>drop frames</em>.</h1>
   <p class="lede">A benchmark tells you how fast a model runs on a bench. Bench2Field measures how much of that survives on the robot, and where the rest goes. It runs the model at the rate the robot's camera really delivers, times <b>the whole frame</b> and not just the model, and refuses any number that doesn't trace to a committed run.</p>
   <div class="spec">
     <div><span class="eyebrow">Field board</span><b>Jetson Orin NX</b><span>inside a ROSMASTER M3 Pro rover</span></div>
