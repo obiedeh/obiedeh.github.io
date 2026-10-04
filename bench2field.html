@@ -1,12 +1,10 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Bench2Field - Obinna Edeh</title>
 <meta name="description" content="Bench2Field measures how much of a model's benchmark performance survives on the robot.">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..125,400..800&family=IBM+Plex+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
 <link rel="icon" href="/favicon.svg">
 <style>
 /* Layout: an instrument report. Decision band on top, then evidence in reading order, provenance last. One column of panels on a tinted ground, charts on raised plates. */
@@ -187,8 +185,19 @@ h1.brand{font-size:clamp(44px,8vw,84px);font-stretch:85%;font-weight:800;letter-
 footer{border-top:1px solid var(--rule);padding-top:18px;display:flex;flex-wrap:wrap;gap:8px 24px;justify-content:space-between;font-size:13px;color:var(--ink-3)}
 footer a{color:var(--accent)}
 </style>
-</head>
-<body>
+<style id="ee-theme">:root,:root:not([data-theme="light"]),:root[data-theme="dark"]{--bg:#202224;--plate:#181b1d;--ink:#eef1e8;--ink-2:#c9cfc2;--ink-3:#a3aa9c;--rule:#393d3f;--grid:#2c2f31;--accent:#b7f34a;--s1:#68b7ff;--s2:#ff9c59;--s3:#b7f34a;--s4:#f0b52e;--s5:#ff8fb4;--s6:#c3a6ff;--warn:#f0b75a;--warn-bg:#3a2a0e;--bad:#ff7a6b;--bad-bg:#3d1a1a;--good:#b7f34a;--good-bg:#b7f34a1f;--f-display:"Helvetica Neue",Helvetica,Arial,sans-serif;--f-body:"Helvetica Neue",Helvetica,Arial,sans-serif;--f-data:ui-monospace,"SFMono-Regular",Consolas,"Liberation Mono",Menlo,monospace;color-scheme:dark}h1,h2,h3{font-family:"Helvetica Neue",Helvetica,Arial,sans-serif;font-weight:500;letter-spacing:-.02em}h1{letter-spacing:-.035em}:root[data-theme="light"]{--bg:#f6f7f3;--plate:#ffffff;--ink:#1a1c1e;--ink-2:#3d4239;--ink-3:#5d6459;--rule:#d8dbd2;--grid:#e6e8e2;--accent:#4d7c0f;--s1:#1f6fd1;--s2:#c2560c;--s3:#4d7c0f;--s4:#b07800;--s5:#c2386f;--s6:#6d4bc4;--warn:#9a5b00;--warn-bg:#fbefd6;--bad:#b4232c;--bad-bg:#fbe3e3;--good:#4d7c0f;--good-bg:#e6f1d3;--f-display:"Helvetica Neue",Helvetica,Arial,sans-serif;--f-body:"Helvetica Neue",Helvetica,Arial,sans-serif;--f-data:ui-monospace,"SFMono-Regular",Consolas,"Liberation Mono",Menlo,monospace;color-scheme:light}@media print{:root,:root:not([data-theme="light"]),:root[data-theme="dark"]{--bg:#f6f7f3;--plate:#ffffff;--ink:#1a1c1e;--ink-2:#3d4239;--ink-3:#5d6459;--rule:#d8dbd2;--grid:#e6e8e2;--accent:#4d7c0f;--s1:#1f6fd1;--s2:#c2560c;--s3:#4d7c0f;--s4:#b07800;--s5:#c2386f;--s6:#6d4bc4;--warn:#9a5b00;--warn-bg:#fbefd6;--bad:#b4232c;--bad-bg:#fbe3e3;--good:#4d7c0f;--good-bg:#e6f1d3;--f-display:"Helvetica Neue",Helvetica,Arial,sans-serif;--f-body:"Helvetica Neue",Helvetica,Arial,sans-serif;--f-data:ui-monospace,"SFMono-Regular",Consolas,"Liberation Mono",Menlo,monospace;color-scheme:light}}
+body{margin:0}
+.ee-band{background:#181b1d;border-bottom:1px solid #393d3f;color:#eef1e8;font:14px/1.4 "Helvetica Neue",Helvetica,Arial,sans-serif;position:relative;z-index:50}
+.ee-band .ee-in{max-width:1120px;margin:0 auto;padding:10px 20px;display:flex;flex-wrap:wrap;gap:8px 18px;align-items:center;justify-content:space-between}
+.ee-band a{color:#a3aa9c;text-decoration:none}.ee-band a:hover{color:#eef1e8}
+.ee-band .ee-mark{display:inline-flex;align-items:center;gap:8px;color:#eef1e8;font-weight:600;letter-spacing:-.01em}
+.ee-band .ee-mark i{display:inline-block;width:14px;height:14px;border-radius:2px;background:linear-gradient(135deg,#b7f34a 0 50%,#68b7ff 50% 100%)}
+.ee-band .ee-mark span{color:#a3aa9c;font-weight:400}.ee-band nav{display:flex;gap:16px}
+.ee-foot{border-top:1px solid #393d3f;background:#181b1d;color:#7c8378;font:13px/1.5 "Helvetica Neue",Helvetica,Arial,sans-serif}
+.ee-foot .ee-in{max-width:1120px;margin:0 auto;padding:14px 20px}.ee-foot a{color:#a3aa9c}
+@media print{.ee-band,.ee-foot{background:#fff;color:#5d6459;border-color:#d8dbd2}.ee-band .ee-mark{color:#1a1c1e}}
+</style></head>
+<body><div class="ee-band"><div class="ee-in"><a class="ee-mark" href="https://embodiededge.ai"><i></i>EmbodiedEdge <span>Labs · Evidence</span></a><nav><a href="https://github.com/obiedeh/bench2field">Repository</a><a href="https://embodiededge.ai">Lab</a><a href="https://github.com/obiedeh">Obinna Edeh</a></nav></div></div>
 
 <div class="wrap">
 <header>
@@ -576,5 +585,5 @@ document.querySelectorAll('#setf button').forEach(b=>b.addEventListener('click',
 
 </script>
 
-</body>
+<div class="ee-foot"><div class="ee-in">An <a href="https://embodiededge.ai">EmbodiedEdge Labs</a> project. Measured on real hardware, published as found.</div></div></body>
 </html>
