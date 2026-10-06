@@ -219,7 +219,7 @@ h3{font-weight:600;letter-spacing:-.02em}
   <p class="lede">A distributed antenna system is the last physical layer of a cellular network, where the carrier's signal has to work inside a real building. Technicians installing and commissioning one ask the copilot what to do next. It answers from OEM manuals and general DAS field guides, keeps every value and safety warning as the source states it, and says plainly when no source covers the question instead of guessing.</p>
   <div class="spec">
     <div><span class="label">Model</span><b>Gemma 4 (e4b)</b><span>Ollama on an RTX 5090 workstation</span></div>
-    <div><span class="label">Library</span><b>134 active sources</b><span>69 OEM documents, 7 manufacturers</span></div>
+    <div><span class="label">Library</span><b>Seven manufacturers</b><span>plus general DAS field guides</span></div>
     <div><span class="label">Retrieval</span><b>Layered, scope-aware</b><span>Embeddings plus keyword index</span></div>
     <div><span class="label">Checks</span><b>548 tests · 66/66</b><span>unit tests, cross-OEM benchmark</span></div>
   </div>
@@ -423,16 +423,7 @@ h3{font-weight:600;letter-spacing:-.02em}
   <div class="head">
     <span class="label">Library</span>
     <h2 id="lib-h">What it draws on</h2>
-    <p>Installation guides, commissioning guides and user manuals from seven manufacturers, plus 61 general DAS guides covering fundamentals, design, fiber, coax, testing, troubleshooting and public safety. Manuals are processed once into a single searchable file, so a deployed copy never needs the original PDFs.</p>
-  </div>
-  <div class="lib">
-    <div><b>OEM A</b><em>16 docs</em><span>Platform A4, Platform A1/E/M, Platform A6, Platform A5</span></div>
-    <div><b>OEM B</b><em>15 docs</em><span>Platform B2, OEM B Platform B1</span></div>
-    <div><b>OEM C</b><em>10 docs</em><span>Platform C1, Platform C2, SDR, Platform C4</span></div>
-    <div><b>OEM E</b><em>8 docs</em><span>Platform E1, Platform E2 Platform E3</span></div>
-    <div><b>OEM D</b><em>7 docs</em><span>Platform D1, optical DAS</span></div>
-    <div><b>OEM F</b><em>7 docs</em><span>3000, Platform F1, Platform F2</span></div>
-    <div><b>OEM G</b><em>6 docs</em><span>Platform G1, Platform G2</span></div>
+    <p>Installation, commissioning and operations guidance across seven manufacturers, plus general DAS guides covering fundamentals, design, fiber, coax, testing, troubleshooting and public safety.</p>
   </div>
 </section>
 
@@ -449,7 +440,7 @@ h3{font-weight:600;letter-spacing:-.02em}
     <div class="score"><b>0.833</b><p>Decline recall: questions the library does not cover, declined instead of answered from model memory.</p></div>
     <div class="score"><b>1.4 s</b><p>Typical response time on the workstation; 11.0 s at the 95th percentile.</p></div>
   </div>
-  <p class="note">Generation evaluation on the workstation: Gemma 4 e4b answering, Qwen3 30B judging, 26 judged answers. Questions whose expected manual is not in the library were scored separately, since declining is the correct answer for them. Scored before this week&rsquo;s 19 new manuals were added; a re-score is listed under Next. Repeat judging of the same answers moved faithfulness by about 0.04, so smaller differences are not claimed.</p>
+  <p class="note">Generation evaluation on the workstation: Gemma 4 e4b answering, Qwen3 30B judging, 26 judged answers. Questions whose expected manual is not in the library were scored separately, since declining is the correct answer for them. Repeat judging of the same answers moved faithfulness by about 0.04, so smaller differences are not claimed.</p>
 </section>
 
 <section aria-labelledby="s-guard">
@@ -517,9 +508,9 @@ h3{font-weight:600;letter-spacing:-.02em}
         <thead><tr><th>Found in the field UI</th><th>Fix</th></tr></thead>
         <tbody>
           <tr><td>&ldquo;How do I commission a DAS?&rdquo; got a vendor clarification instead of steps</td><td>Broad questions get vendor-neutral steps first, then the platform-specific options</td></tr>
-          <tr><td>Quoted manual text came back lowercased and broken apart</td><td>Passages are stored and shown exactly as the manual prints them; corpus rebuilt</td></tr>
+          <tr><td>Quoted manual text came back lowercased and broken apart</td><td>Passages are stored and shown exactly as the manual prints them; index rebuilt</td></tr>
           <tr><td>Declines looked like a half-filled answer with a &ldquo;grounded&rdquo; badge</td><td>One plain message that the sources don&rsquo;t cover the question, with no badge</td></tr>
-          <tr><td>Answers copied manual sentences; cover pages and regulatory boilerplate took top results</td><td>Answers rephrased in plain field language, keeping values, units, part numbers, alarm codes and menu paths exact; boilerplate ranked down</td></tr>
+          <tr><td>Answers repeated source wording; cover pages and regulatory boilerplate took top results</td><td>Answers rephrased in plain field language, keeping values, units, part numbers, alarm codes and menu paths exact; boilerplate ranked down</td></tr>
           <tr><td>Citations showed the first lines of a page, not the relevant passage</td><td>Citations show the sentences that match the question; the copilot never points to a figure the technician cannot see</td></tr>
         </tbody>
       </table></div>
@@ -544,8 +535,7 @@ h3{font-weight:600;letter-spacing:-.02em}
       <h3>Next</h3>
       <ul>
         <li><span class="mk open"></span><span><b>Cloud deployment</b> on AWS App Runner with Amazon Bedrock, from the written runbook.</span></li>
-        <li><span class="mk open"></span><span><b>Text recognition</b> so manuals that exist only as images can join the library.</span></li>
-        <li><span class="mk open"></span><span><b>Re-score generation</b> with this week's 19 new manuals in place.</span></li>
+        <li><span class="mk open"></span><span><b>Re-score generation</b> on the current build.</span></li>
         <li><span class="mk open"></span><span><b>Field trial</b> with working technicians on a live commissioning job.</span></li>
       </ul>
     </div>
