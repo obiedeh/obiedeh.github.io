@@ -221,7 +221,7 @@ h3{font-weight:600;letter-spacing:-.02em}
     <div><span class="label">Model</span><b>Gemma 4 (e4b)</b><span>Ollama on an RTX 5090 workstation</span></div>
     <div><span class="label">Library</span><b>Seven manufacturers</b><span>plus general DAS field guides</span></div>
     <div><span class="label">Retrieval</span><b>Layered, scope-aware</b><span>Embeddings plus keyword index</span></div>
-    <div><span class="label">Checks</span><b>548 tests · 66/66</b><span>unit tests, cross-OEM benchmark</span></div>
+    <div><span class="label">Checks</span><b>548 tests · 66/66</b><span>unit tests, planning benchmark on fixtures</span></div>
   </div>
 </header>
 
@@ -435,12 +435,13 @@ h3{font-weight:600;letter-spacing:-.02em}
   <div class="scores">
     <div class="score"><b>0.906</b><p>Faithfulness: the share of each answer's claims an independent judge model traces to the retrieved evidence.</p></div>
     <div class="score"><b>0</b><p>Unflagged numbers missing from the sources. Every unsupported value is marked for verification.</p></div>
-    <div class="score"><b>66/66</b><p>Cross-OEM retrieval benchmark cases passed, with no other-vendor evidence accepted.</p></div>
+    <div class="score"><b>66/66</b><p>Cross-OEM planning benchmark cases passed on fixed fixtures, with no other-vendor source accepted. It checks scope and source selection, not retrieval accuracy on the corpus.</p></div>
     <div class="score"><b>9.5%</b><p>False refusals on questions whose source manual is in the library (2 of 21).</p></div>
     <div class="score"><b>0.833</b><p>Decline recall: questions the library does not cover, declined instead of answered from model memory.</p></div>
     <div class="score"><b>1.4 s</b><p>Typical response time on the workstation; 11.0 s at the 95th percentile.</p></div>
   </div>
   <p class="note">Generation evaluation on the workstation: Gemma 4 e4b answering, Qwen3 30B judging, 26 judged answers. Questions whose expected manual is not in the library were scored separately, since declining is the correct answer for them. Repeat judging of the same answers moved faithfulness by about 0.04, so smaller differences are not claimed.</p>
+  <p class="note"><b>Superseded, October 18, 2026.</b> A frozen baseline on the later build, with its 30 questions and gates fixed before any output was seen, did not pass: automated faithfulness 0.537 over the 13 answers the judge scored (14 judge calls failed and were kept as failures, not dropped), 8 of 20 answerable questions retrieved their expected document, 1 of 5 out-of-scope questions was declined, and response time was 6.2 s typical and 10.8 s at the 95th percentile with a smaller answering model. The figures above remain the record of the October 3 build; they do not describe the current one. The next published score will come from a rerun with the judge failures diagnosed first.</p>
 </section>
 
 <section aria-labelledby="s-guard">
@@ -535,7 +536,7 @@ h3{font-weight:600;letter-spacing:-.02em}
       <h3>Next</h3>
       <ul>
         <li><span class="mk open"></span><span><b>Cloud deployment</b> on AWS App Runner with Amazon Bedrock, from the written runbook.</span></li>
-        <li><span class="mk open"></span><span><b>Re-score generation</b> on the current build.</span></li>
+        <li><span class="mk open"></span><span><b>Re-score generation</b> on the current build. The October 18 frozen baseline failed its gates (see Measured); the judge failures get diagnosed before the next scored run.</span></li>
         <li><span class="mk open"></span><span><b>Field trial</b> with working technicians on a live commissioning job.</span></li>
       </ul>
     </div>
@@ -553,7 +554,8 @@ h3{font-weight:600;letter-spacing:-.02em}
       <ul class="plain">
         <li>Generation evaluation score log: every run, model, judge and configuration</li>
         <li>Working local system handoff, 2026-10-03: the measured build and the field-testing fixes</li>
-        <li>Evaluation cases: 28 generation, 37 grounding and 66 cross-OEM retrieval cases</li>
+        <li>Evaluation cases: 28 generation, 37 grounding and 66 cross-OEM planning cases</li>
+        <li>Frozen consolidated baseline, 2026-10-18: 30 questions and gates fixed before any output; result rejected, kept as published</li>
       </ul>
 <p class="note">The source repository is private. Evaluation files and the score log are available on request.</p>
     </div>
