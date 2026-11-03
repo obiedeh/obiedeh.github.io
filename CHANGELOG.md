@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- 2026-11-03: Home page: the second hero button reads "Read the newsletter" and links to At the Edge with Obyno, in place of "Discuss a system", so the page offers one next step and no service language.
 - 2026-11-03: Home page and commissioning copilot page: the retired EmbodiedEdge Labs name replaced with EmbodiedEdge.
 - 2026-11-03: Bench2Field page: test count corrected to 188 passing and 1 skipped, as run in the project's own environment.
 - 2026-11-03: Bench2Field page brought up to date: case studies 02 to 05 added at their recorded status, 184 tests and the measured FP32 baseline accuracy, status dated 3 November, and the retired EmbodiedEdge Labs name replaced with EmbodiedEdge.
