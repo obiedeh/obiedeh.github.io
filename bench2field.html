@@ -198,13 +198,13 @@ body{margin:0}
 .ee-foot .ee-in{max-width:1120px;margin:0 auto;padding:14px 20px}.ee-foot a{color:#a3aa9c}
 @media print{.ee-band,.ee-foot{background:#fff;color:#5d6459;border-color:#d8dbd2}.ee-band .ee-mark{color:#1a1c1e}}
 </style><style id="ee-type">body{font-family:"Helvetica Neue",Helvetica,Arial,sans-serif}h1{font-family:"Helvetica Neue",Helvetica,Arial,sans-serif!important;font-size:clamp(44px,4.6vw,66px)!important;font-weight:500!important;line-height:1!important;letter-spacing:-.06em!important;text-transform:none!important;font-stretch:normal!important}h1 em,h1 .ee-g{font-style:normal;color:#b7f34a!important;-webkit-text-fill-color:#b7f34a}h1 em.b,h1 .ee-b{font-style:normal;color:#68b7ff!important;-webkit-text-fill-color:#68b7ff}h2{font-family:"Helvetica Neue",Helvetica,Arial,sans-serif!important;font-size:clamp(28px,3.2vw,42px)!important;font-weight:500!important;line-height:1.08!important;letter-spacing:-.04em!important;text-transform:none!important;font-stretch:normal!important;color:inherit}h3{font-family:"Helvetica Neue",Helvetica,Arial,sans-serif!important;font-size:19px!important;font-weight:600!important;line-height:1.25!important;letter-spacing:-.02em!important;text-transform:none!important;font-stretch:normal!important}header .toprow .eyebrow{font-family:ui-monospace,"SFMono-Regular",Consolas,"Liberation Mono",Menlo,monospace!important;font-size:12px!important;font-weight:600!important;letter-spacing:.08em!important;text-transform:uppercase!important;line-height:1.4!important;color:#b7f34a!important}.eyebrow{font-family:ui-monospace,"SFMono-Regular",Consolas,"Liberation Mono",Menlo,monospace!important;font-size:12px!important;font-weight:600!important;letter-spacing:.08em!important;text-transform:uppercase!important;line-height:1.4!important;color:#68b7ff!important}</style></head>
-<body><div class="ee-band"><div class="ee-in"><a class="ee-mark" href="https://embodiededge.ai"><i></i>EmbodiedEdge <span>Labs · Evidence</span></a><nav><a href="https://github.com/obiedeh/bench2field">Repository</a><a href="https://embodiededge.ai">Lab</a><a href="https://github.com/obiedeh">Obinna Edeh</a></nav></div></div>
+<body><div class="ee-band"><div class="ee-in"><a class="ee-mark" href="https://embodiededge.ai"><i></i>EmbodiedEdge <span>· Evidence</span></a><nav><a href="https://github.com/obiedeh/bench2field">Repository</a><a href="https://embodiededge.ai">Lab</a><a href="https://github.com/obiedeh">Obinna Edeh</a></nav></div></div>
 
 <div class="wrap">
 <header>
   <div class="toprow">
     <span class="eyebrow">Bench2Field · Model benchmarking measured on the robot</span>
-    <span class="pill good"><svg viewBox="0 0 12 12" aria-hidden="true"><path d="M2 6.5 5 9l5-6" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>v1.0.1 released · phase 2 under way</span>
+    <span class="pill good"><svg viewBox="0 0 12 12" aria-hidden="true"><path d="M2 6.5 5 9l5-6" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>v1.0.1 released · four more case studies measured</span>
   </div>
   <h1 class="brand">The <em class="b">benchmark</em> said GO. The robot would <em>drop frames</em>.</h1>
   <p class="lede">A benchmark tells you how fast a model runs on a bench. Bench2Field measures how much of that survives on the robot, and where the rest goes. It runs the model at the rate the robot's camera really delivers, times <b>the whole frame</b> and not just the model, and refuses any number that doesn't trace to a committed run.</p>
@@ -321,15 +321,29 @@ body{margin:0}
   </div>
 </section>
 <section class="panel">
-  <div class="panel-head"><div><span class="eyebrow">Status, October 2026</span><h2>Measured, and still to measure</h2></div></div>
+  <div class="panel-head"><div><span class="eyebrow">Beyond case study 01</span><h2>Four more workloads, measured the same way</h2>
+  <p>Each runs on named boards, and every number traces to a committed record in the repository.</p></div></div>
+  <div class="ledger">
+    <div class="col"><ul>
+      <li><span class="mk ok"></span><span><b>02 · Alpamayo 1</b>, NVIDIA's 10B driving-reasoning model: decision latency, memory and power on the RTX 5090 and the Jetson AGX Thor, profiled on both, with two preprocessing kernels verified and timed.</span></li>
+      <li><span class="mk ok"></span><span><b>03 · DeepStream 7.1</b> on the rover's Jetson Orin NX, YOLOv8n in TensorRT fp16: frame rate and board power from the rover's camera and a recorded clip, with nothing changed at system level.</span></li></ul></div>
+    <div class="col"><ul>
+      <li><span class="mk ok"></span><span><b>04 · Isaac ROS 4.5</b>, YOLOv8 through the TensorRT node in a container: measured on the RTX 5090 as a lower bound; the Jetson AGX Thor run is still to come.</span></li>
+      <li><span class="mk ok"></span><span><b>05 · Cosmos Predict 2.5</b>: the wall time, GPU memory and output of one video forecast on the RTX 5090, and whether it fits the Jetson AGX Thor, from committed generation records.</span></li></ul></div>
+  </div>
+  <p class="note">Details and limits for each are in its case study folder on <a href="https://github.com/obiedeh/bench2field/tree/master/case_studies">GitHub</a>.</p>
+</section>
+<section class="panel">
+  <div class="panel-head"><div><span class="eyebrow">Status, 3 November 2026</span><h2>Measured, and still to measure</h2></div></div>
   <div class="ledger">
     <div class="col"><span class="eyebrow">v1: measure and diagnose</span><ul>
       <li><span class="mk ok"></span><span><b>Bring-up on three boards</b> with real-hardware fixtures for every telemetry parser.</span></li>
       <li><span class="mk ok"></span><span><b>FP32 baselines</b> on all three boards at 10, 26, 30 and 100 Hz, three alternated repeats each.</span></li>
       <li><span class="mk ok"></span><span><b>Full-frame profiles</b> on all three boards on the rover's own frames, plus an Nsight Systems capture on the 5090.</span></li>
-      <li><span class="mk ok"></span><span><b>145 tests</b> on Python 3.10 and 3.12, CI on every push, tagged releases with the report attached.</span></li></ul></div>
+      <li><span class="mk ok"></span><span><b>184 tests</b> (5 more skip where hardware is missing), CI on every push, tagged releases with the report attached.</span></li>
+      <li><span class="mk ok"></span><span><b>Baseline accuracy</b> on a 500-image COCO val2017 subset: person AP 0.796, identical on the CUDA and TensorRT providers.</span></li></ul></div>
     <div class="col"><span class="eyebrow">Not yet measured</span><ul>
-      <li><span class="mk open"></span><span><b>Accuracy</b> of any optimized variant. The harness comes first in the next phase.</span></li>
+      <li><span class="mk open"></span><span><b>Accuracy</b> of any optimized variant, and on labelled rover frames.</span></li>
       <li><span class="mk open"></span><span><b>The rover under load</b>: field runs with its SLAM stack up, load replay on the bench, and gap attribution.</span></li>
       <li><span class="mk open"></span><span><b>Busy scenes.</b> The profiled frames show a plain wall, so decode and NMS were at their cheapest.</span></li>
       <li><span class="mk open"></span><span><b>AMD hardware</b> for the ROCm port.</span></li></ul></div>
@@ -344,7 +358,7 @@ body{margin:0}
   <div class="tablewrap"><table id="prov"></table></div>
   <p class="note">Rows marked reference are kept as evidence: spin-on runs, the first Thor sweep with an idle vLLM container resident, and a stopped re-run. A dash in the commit column means the run predates the provenance guard. The Thor and Orin differ in TensorRT and cuDNN because they run JetPack 7 and 6.</p>
 </section>
-<footer><span>Bench2Field · An EmbodiedEdge Labs project · <a href="/">Obinna Edeh</a></span><span><a href="https://github.com/obiedeh/bench2field">github.com/obiedeh/bench2field</a> · v1.0.1 · Apache 2.0</span></footer>
+<footer><span>Bench2Field · An EmbodiedEdge project · <a href="/">Obinna Edeh</a></span><span><a href="https://github.com/obiedeh/bench2field">github.com/obiedeh/bench2field</a> · v1.0.1 · Apache 2.0</span></footer>
 </div>
 <div id="tip" hidden></div>
 <script>
@@ -586,5 +600,5 @@ document.querySelectorAll('#setf button').forEach(b=>b.addEventListener('click',
 
 </script>
 
-<div class="ee-foot"><div class="ee-in">An <a href="https://embodiededge.ai">EmbodiedEdge Labs</a> project. Measured on real hardware, published as found.</div></div></body>
+<div class="ee-foot"><div class="ee-in">An <a href="https://embodiededge.ai">EmbodiedEdge</a> project. Measured on real hardware, published as found.</div></div></body>
 </html>
