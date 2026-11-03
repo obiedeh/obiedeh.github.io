@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- 2026-11-03: Jetson Edge AI Security page: the 2026-10-29 TensorRT-on-Thor measurement (no engine for the shipped ONNX-ML models, CPU fallback). Physical AI Safety Observability page: the 2026-10-29 hazard analysis, method and vocabulary only. Both pages: contact line set to the approved wording.
 - 2026-11-03: Home page: the second hero button reads "Read the newsletter" and links to At the Edge with Obyno, in place of "Discuss a system", so the page offers one next step and no service language.
 - 2026-11-03: Home page and commissioning copilot page: the retired EmbodiedEdge Labs name replaced with EmbodiedEdge.
 - 2026-11-03: Bench2Field page: test count corrected to 188 passing and 1 skipped, as run in the project's own environment.

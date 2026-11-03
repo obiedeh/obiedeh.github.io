@@ -471,6 +471,21 @@
 
       <section class="case-section shell">
         <div class="case-grid">
+          <div class="section-kicker">// TENSORRT ON THOR</div>
+          <div class="case-copy">
+            <h2>TensorRT was tested, not assumed.</h2>
+            <p>On 2026-10-29 the TensorRT path was run three ways on the Jetson AGX Thor, with TensorRT 10.13.3. Neither shipped model became an engine: both are ONNX-ML tree and linear models, which TensorRT's parser cannot read (0 of 2 engines). With TensorRT requested, ONNX Runtime placed every model node on the CPU, and the benchmark harness recorded the failure and fell back to the CPU as designed.</p>
+            <p>What this settles: for these models TensorRT is not a deployment option, and the honest description of the edge inference is ONNX Runtime on the Thor's CPU, where a 106 KB detector answers in tens of microseconds. TensorRT becomes relevant with a neural detector, the next model on the roadmap.</p>
+            <div class="evidence-links">
+              <a href="https://github.com/obiedeh/jetson-edge-ai-security/blob/main/reports/thor_tensorrt_build.log">Build log ↗</a>
+              <a href="https://github.com/obiedeh/jetson-edge-ai-security/blob/main/reports/thor_benchmark_trt.json">Benchmark with TensorRT requested ↗</a>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="case-section shell">
+        <div class="case-grid">
           <div class="section-kicker">// CORRECTIONS</div>
           <div class="case-copy">
             <h2>What went wrong and what was corrected.</h2>
@@ -549,7 +564,7 @@
           <div>
             <div class="section-kicker">// CONTACT</div>
             <h2>Let’s build something that can leave the lab.</h2>
-            <p class="contact-intent">Open to leading AI systems work where teams need measurable edge, robotics, and operational evidence.</p>
+            <p class="contact-intent">Open to senior engineering leadership in Physical AI, robotics and edge AI.</p>
           </div>
           <div class="contact-links">
             <a href="mailto:obiedeh@gmail.com">obiedeh@gmail.com <span>↗</span></a>
