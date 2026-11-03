@@ -318,11 +318,11 @@
           </div>
           <div>
             <span>Dates</span>
-            <strong>2026-08-20 measurements, 2026-09-07 corrections</strong>
+            <strong>2026-08-20 to 2026-10-30 measurements, corrections kept on the record</strong>
           </div>
           <div>
             <span>Scope</span>
-            <strong>Inference, probes, simulation validation, correction ledger</strong>
+            <strong>Inference, probes, learning from demonstrations, motion planning, correction ledger</strong>
           </div>
         </div>
       </section>
@@ -411,6 +411,22 @@
 
       <section class="case-section shell">
         <div class="case-grid">
+          <div class="section-kicker">// LEARNING FROM DEMONSTRATIONS</div>
+          <div class="case-copy">
+            <h2>The data decided the result, not the model.</h2>
+            <p>From 2026-10-18 to 2026-10-30, ACT policies for the Synria arm were trained in Isaac Sim on an RTX 5090 and scored on the same 50 seeded cup placements. A policy trained on 45 teleoperated takes, with the real leader arm driving the simulated follower, lifted the cup in 28 of 50. For the harder task of placing the cup on its mark, a policy trained on 131 flawless scripted demonstrations placed it 0 times.</p>
+            <p>Demonstrations that kept deliberate off-target arrivals and the correction for each changed that: 122 of them placed the cup 16 of 50 times and lifted it 38 (paired exact McNemar p 3e-5). The same recipe at 291 demonstrations placed 20 of 50, inside the noise against 16 (p 0.57), so a second placement seed comes before adopting it. Corpora that added back-outs and a return to rest placed 3 of 50. The scripted executor places 50 of 50.</p>
+            <p>MoveIt 2 planning for the arm, measured in simulation on 2026-10-29, planned 50 of 50 seeded joint-space goals with a median planning time of 11.6 ms, against an approximate collision model in an empty scene. No learned policy has run on the physical arm.</p>
+            <div class="evidence-links">
+              <a href="https://github.com/obiedeh/physical-ai-jetson-robotics/blob/main/reports/sim_policy/paired_seed2026/PAIRED.md">Paired campaigns ↗</a>
+              <a href="https://github.com/obiedeh/physical-ai-jetson-robotics/blob/main/reports/simulation/synria_moveit_planning.json">Planning record ↗</a>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="case-section shell">
+        <div class="case-grid">
           <div class="section-kicker">// CORRECTIONS</div>
           <div class="case-copy">
             <h2>What went wrong and what was corrected.</h2>
@@ -443,7 +459,7 @@
           <div class="case-copy">
             <h2>What is not established.</h2>
             <ul>
-              <li>Autonomous real-arm pick and place is not established.</li>
+              <li>Autonomous real-arm pick and place is not established; every learned-policy result above is simulation.</li>
               <li>TensorRT/PyTorch numerical parity is not recorded.</li>
               <li>The Thor and Orin measurements are short runs, not sustained thermal or safety validation.</li>
               <li>Physical object-success ground truth is not established for the command-derived hardware path.</li>
@@ -466,7 +482,7 @@
           <div>
             <div class="section-kicker">// CONTACT</div>
             <h2>Let’s build something that can leave the lab.</h2>
-            <p class="contact-intent">Open to leading AI systems work where teams need measurable edge, robotics, and operational evidence.</p>
+            <p class="contact-intent">Open to senior engineering leadership in Physical AI, robotics and edge AI.</p>
           </div>
           <div class="contact-links">
             <a href="mailto:obiedeh@gmail.com">obiedeh@gmail.com <span>↗</span></a>
