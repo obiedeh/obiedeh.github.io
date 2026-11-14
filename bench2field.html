@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Bench2Field - Obinna Edeh</title>
-<meta property="og:type" content="article"><meta property="og:title" content="Bench2Field: the benchmark said GO, the robot would drop frames"><meta property="og:description" content="How much of a model optimization survives contact with a real rover: 47.8 ms full frame against a 33.3 ms budget on Jetson Orin NX."><meta property="og:image" content="https://obiedeh.github.io/assets/og/bench2field.png"><meta property="og:image:width" content="1200"><meta property="og:image:height" content="627"><meta name="twitter:card" content="summary_large_image"><meta name="twitter:image" content="https://obiedeh.github.io/assets/og/bench2field.png">
+<meta property="og:type" content="article"><meta property="og:title" content="Bench2Field: the benchmark said GO, the robot would drop frames"><meta property="og:description" content="How much of a model optimization survives contact with a real rover: 47.8 ms full frame against a 33.3 ms budget on Jetson Orin NX at default clocks, about 21 ms with the clocks pinned."><meta property="og:image" content="https://obiedeh.github.io/assets/og/bench2field.png"><meta property="og:image:width" content="1200"><meta property="og:image:height" content="627"><meta name="twitter:card" content="summary_large_image"><meta name="twitter:image" content="https://obiedeh.github.io/assets/og/bench2field.png">
 <meta name="description" content="Bench2Field measures how much of a model's benchmark performance survives on the robot.">
 <link rel="icon" href="/favicon.svg">
 <style>
@@ -222,7 +222,8 @@ body{margin:0}
     <p id="headline-sub"></p>
     <div class="ladder" id="ladder"></div>
     <div class="pills"><span class="pill good"><svg viewBox="0 0 12 12" aria-hidden="true"><path d="M2 6.5 5 9l5-6" fill="none" stroke="currentColor" stroke-width="1.6"/></svg><span id="miss-pill"></span></span>
-    <span class="pill bad"><svg viewBox="0 0 12 12" aria-hidden="true"><path d="M3 3l6 6M9 3 3 9" stroke="currentColor" stroke-width="1.6"/></svg>Full frame misses the 33.3 ms deadline</span></div>
+    <span class="pill bad"><svg viewBox="0 0 12 12" aria-hidden="true"><path d="M3 3l6 6M9 3 3 9" stroke="currentColor" stroke-width="1.6"/></svg>At default clocks the full frame misses the 33.3 ms deadline</span></div>
+    <p><b>Corrected 2026-11-14:</b> the original figure was measured at default clocks; see the retest below. <b>Retest, 2026-11-11:</b> with the board's clocks pinned at maximum (jetson_clocks: CPU, GPU and memory clocks together) the same frame takes <b class="num">21.1 to 21.5 ms</b> at p95 on the Orin NX, inside the 33.3 ms deadline. At default clocks the GPU sat mostly at 408 of 1,173 MHz. Pinning cost about 60% more board power at 30 frames per second (8.9 W to 14.5 W). On the Jetson AGX Thor the frame went from about 14 ms to about 7 ms. Limits: saved image files, not the live camera with the rover's stack running; the three clocks were pinned together, not separated; one test session per board. <a href="https://github.com/obiedeh/bench2field/blob/master/case_studies/01_perception_detector/runs/clock_retest_20261111/README.md">Records and method</a>.</p>
   </div>
   <div class="tiles" id="tiles"></div>
 </div>
@@ -238,7 +239,7 @@ body{margin:0}
 
 
 <section class="panel">
-  <div class="panel-head"><div><span class="eyebrow">Bench vs field, whole frame</span><h2>Same frames, three boards: only the rover misses</h2>
+  <div class="panel-head"><div><span class="eyebrow">Bench vs field, whole frame</span><h2>Same frames, three boards: at default clocks only the rover misses</h2>
   <p>Median time per stage, 300 frames from the rover's camera at 640×480, one frame at a time, TensorRT FP32, threads not spinning. Same frames and code on every board, drawn to one scale. The black figure at the end of each bar is the frame's p95.</p></div></div>
   <div class="legend" id="stage-legend2"></div>
   <div class="chart" id="cmp-chart"></div>
@@ -273,7 +274,8 @@ body{margin:0}
   <div class="chart" id="stage-chart"></div>
   <div class="spin">
     <div class="spin-row"><h3>ONNX Runtime thread spinning, rover 720p</h3>
-      <p>Spin-waiting threads steal CPU from the host stages. Turning spinning off leaves inference unchanged and collapses the tail, which is why every baseline above runs with it off.</p></div>
+      <p>Spin-waiting threads steal CPU from the host stages. Turning spinning off leaves inference unchanged and collapses the tail, which is why every baseline above runs with it off.</p>
+      <p><b>Correction, 2026-11-14:</b> this finding did not hold on retest. The bars are one run per setting from 2026-10-03. On 2026-11-11, alternating repeats on the workstation, the Jetson AGX Thor and the Jetson Orin NX, idle and under load, showed the same frame tail with spinning on or off. The larger effect found in that session is the board's clock state, described in the retest note at the top of this page. <a href="https://github.com/obiedeh/bench2field/blob/master/case_studies/01_perception_detector/runs/clock_retest_20261111/README.md">Records</a>.</p></div>
     <div class="spin-row" id="spin-bars"></div>
   </div>
 </section>
