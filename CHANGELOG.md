@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- 2026-11-15: Home page opening sentence corrected to "I design and build Physical AI and edge AI systems, and prove them on real robots and hardware." The earlier wording could be read as designing robots.
 - 2026-11-15: Home page opening paragraph states what he builds first: "I design and build Physical AI, robotics and edge AI systems, then prove them on real hardware."
 - 2026-11-14: Bench2Field page and home page proof line corrected: the 47.8 ms full frame on the rover is labelled as a default-clock figure, and the 2026-11-11 retest with the clocks pinned (21.1 to 21.5 ms at p95 on the Jetson Orin NX, 8.9 W to 14.5 W at 30 frames per second) is stated beside it with its limits. The thread-spinning panel carries a dated note that the finding did not hold on retest.
 - 2026-11-03: Commissioning copilot page dated to its October 3 record, with the November 1 test count and the retired Labs label removed from the band; home page copilot card tagged Ollama, the measured local stack, in place of Bedrock.
