@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- 2026-11-15: Two full build pages, `urban-edge-vision-analytics-full-build.html` and `physical-ai-safety-observability-full-build.html`, built on the open-core showcases: what the full build adds, the console and gate on video, the Cosmos 3 runs and their measured results, with no link to private source. Media under `assets/full-build/`. The `-pro.html` addresses the open-core READMEs link to now redirect to them.
 - 2026-11-15: Home page opening sentence corrected to "I design and build Physical AI and edge AI systems, and prove them on real robots and hardware." The earlier wording could be read as designing robots.
 - 2026-11-15: Home page opening paragraph states what he builds first: "I design and build Physical AI, robotics and edge AI systems, then prove them on real hardware."
 - 2026-11-14: Bench2Field page: the 2026-11-11 retest's board power on the Jetson AGX Thor at 30 frames per second added beside the frame times (24.9 to 25.0 W at default clocks, 28.5 to 29.7 W with the clocks pinned), from the [retest record](https://github.com/obiedeh/bench2field/blob/master/case_studies/01_perception_detector/runs/clock_retest_20261111/README.md).
